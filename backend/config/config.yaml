@@ -31,3 +31,4 @@ logging:
 analysis:
   timeout: 10 # seconds
   verify_ssl: false
+  max_body_size: 10 # MB

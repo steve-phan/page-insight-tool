@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/services"
+	analyzer "page-insight-tool/internal/services/analyzer"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +19,7 @@ func AnalyzeHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		response, err := services.Analyze(url)
+		response, err := analyzer.NewAnalyzerService(cfg).Analyze(c.Request.Context(), url)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),

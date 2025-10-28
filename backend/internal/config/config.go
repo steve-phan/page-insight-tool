@@ -47,8 +47,9 @@ type LoggingConfig struct {
 }
 
 type AnalysisConfig struct {
-	Timeout   time.Duration `mapstructure:"timeout"`
-	VerifySSL bool          `mapstructure:"verify_ssl"`
+	Timeout     time.Duration `mapstructure:"timeout"`
+	VerifySSL   bool          `mapstructure:"verify_ssl"`
+	MaxBodySize int64         `mapstructure:"max_body_size"`
 }
 
 // LoadConfig loads configuration from file and environment variables
@@ -112,6 +113,7 @@ func setDefaults() {
 	// Analysis defaults
 	viper.SetDefault("analysis.timeout", 10)
 	viper.SetDefault("analysis.verify_ssl", false)
+	viper.SetDefault("analysis.max_body_size", int64(10))
 }
 
 // validateConfig validates the configuration
