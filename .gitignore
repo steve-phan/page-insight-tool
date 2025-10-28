@@ -5,6 +5,7 @@
 # Backend specific
 backend/bin/
 backend/coverage.out
+backend/coverage.html
 backend/.env
 backend/.env.local
 backend/.env.*.local

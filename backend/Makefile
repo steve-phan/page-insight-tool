@@ -1,29 +1,34 @@
-# Build variables
-BINARY_NAME=page-insight-tool
-VERSION=1.0.0
-BUILD_DATE=$(shell date +%Y-%m-%dT%H:%M:%S%z)
-GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+.PHONY: build run test test-coverage clean deps tools docker-build docker-run dev fmt vet lint check
 
-# Go build flags
-LDFLAGS=-ldflags "-X main.version=$(VERSION) -X main.buildDate=$(BUILD_DATE) -X main.gitCommit=$(GIT_COMMIT)"
+# Application variables
+APP_NAME = page-insight-tool
+BIN_DIR = bin
+MAIN_GO_PATH = cmd/main.go
 
-# Default target
-all: build
+# Version information
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Build the application
+# Build flags
+LDFLAGS = -X main.version=$(VERSION) \
+          -X main.buildDate=$(BUILD_DATE) \
+          -X main.gitCommit=$(COMMIT)
+
+# Go build
 build:
-	@echo "Building $(BINARY_NAME)..."
-	go build $(LDFLAGS) -o bin/$(BINARY_NAME) ./cmd/
+	@echo "Building $(APP_NAME)..."
+	go build -ldflags "$(LDFLAGS)" -o $(BIN_DIR)/$(APP_NAME) $(MAIN_GO_PATH)
 
 # Run the application
 run: build
-	@echo "Running $(BINARY_NAME)..."
-	./bin/$(BINARY_NAME)
+	@echo "Running $(APP_NAME)..."
+	$(BIN_DIR)/$(APP_NAME)
 
-# Run with hot reload (requires air installed)
+# Development mode with hot reload
 dev:
-	@echo "Starting development server with hot reload..."
-	air
+	@echo "Starting development server..."
+	go run $(MAIN_GO_PATH)
 
 # Run tests
 test:
@@ -33,69 +38,89 @@ test:
 # Run tests with coverage
 test-coverage:
 	@echo "Running tests with coverage..."
-	go test -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out
+	go test -v -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning..."
-	rm -rf bin/ coverage.out
+# Run specific test packages
+test-config:
+	go test -v ./internal/config/...
+
+test-handlers:
+	go test -v ./internal/handlers/...
+
+test-routes:
+	go test -v ./internal/routes/...
+
+test-integration:
+	go test -v ./tests/...
 
 # Format code
 fmt:
 	@echo "Formatting code..."
-	gofmt -w .
+	go fmt ./...
 
 # Vet code
 vet:
 	@echo "Vetting code..."
 	go vet ./...
 
-# Lint code
+# Lint code (requires golangci-lint)
 lint:
 	@echo "Linting code..."
 	golangci-lint run
 
-# Check code quality (fmt + vet + lint)
-check: fmt vet lint
+# Run all checks
+check: fmt vet test
+	@echo "All checks passed!"
 
-# Install dependencies
+# Download dependencies
 deps:
-	@echo "Installing dependencies..."
+	@echo "Downloading Go dependencies..."
 	go mod download
-	go mod verify
+	go mod tidy
 
 # Install development tools
 tools:
 	@echo "Installing development tools..."
-	go install github.com/cosmtrek/air@latest
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install github.com/stretchr/testify@latest
 
 # Docker build
 docker-build:
 	@echo "Building Docker image..."
-	docker build -t $(BINARY_NAME):$(VERSION) .
+	docker build -t $(APP_NAME):$(VERSION) .
 
 # Docker run
 docker-run: docker-build
 	@echo "Running Docker container..."
-	docker run -p 8080:8080 $(BINARY_NAME):$(VERSION)
+	docker run -p 8080:8080 $(APP_NAME):$(VERSION)
 
-# Show help
+# Clean build artifacts
+clean:
+	@echo "Cleaning..."
+	rm -rf $(BIN_DIR)/
+	rm -f coverage.out coverage.html
+
+# Help
 help:
 	@echo "Available targets:"
 	@echo "  build         - Build the application"
 	@echo "  run           - Build and run the application"
-	@echo "  dev           - Run with hot reload (requires air)"
-	@echo "  test          - Run tests"
+	@echo "  dev           - Run in development mode"
+	@echo "  test          - Run all tests"
 	@echo "  test-coverage - Run tests with coverage report"
-	@echo "  clean         - Clean build artifacts"
+	@echo "  test-config   - Run config tests only"
+	@echo "  test-handlers - Run handler tests only"
+	@echo "  test-routes   - Run route tests only"
+	@echo "  test-integration - Run integration tests only"
 	@echo "  fmt           - Format code"
 	@echo "  vet           - Vet code"
 	@echo "  lint          - Lint code"
-	@echo "  check         - Run all code quality checks"
-	@echo "  deps          - Install dependencies"
+	@echo "  check         - Run all checks"
+	@echo "  deps          - Download dependencies"
 	@echo "  tools         - Install development tools"
 	@echo "  docker-build  - Build Docker image"
 	@echo "  docker-run    - Build and run Docker container"
+	@echo "  clean         - Clean build artifacts"
 	@echo "  help          - Show this help"
