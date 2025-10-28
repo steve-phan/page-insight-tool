@@ -103,5 +103,5 @@ func getBuildDate() string {
 	if buildDate := os.Getenv("BUILD_DATE"); buildDate != "" {
 		return buildDate
 	}
-	return "unknown"
+	return time.Now().Local().Format(time.RFC1123)
 }

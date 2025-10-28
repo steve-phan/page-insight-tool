@@ -28,3 +28,6 @@ logging:
   max_backups: 3
   max_age: 28 # days
   compress: true
+analysis:
+  timeout: 10 # seconds
+  verify_ssl: false

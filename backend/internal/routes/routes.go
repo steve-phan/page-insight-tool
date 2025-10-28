@@ -32,5 +32,6 @@ func setupAPIRoutes(router *gin.Engine, cfg *config.Config) {
 	api := router.Group("/api/v1")
 	{
 		api.GET("/health", handlers.HealthHandler(cfg))
+		api.GET("/analyze", handlers.AnalyzeHandler(cfg))
 	}
 }

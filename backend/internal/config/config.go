@@ -9,9 +9,10 @@ import (
 )
 
 type Config struct {
-	Server  ServerConfig  `mapstructure:"server"`
-	App     AppConfig     `mapstructure:"app"`
-	Logging LoggingConfig `mapstructure:"logging"`
+	Server   ServerConfig   `mapstructure:"server"`
+	App      AppConfig      `mapstructure:"app"`
+	Logging  LoggingConfig  `mapstructure:"logging"`
+	Analysis AnalysisConfig `mapstructure:"analysis"`
 }
 
 // ServerConfig holds server-related configuration
@@ -43,6 +44,11 @@ type LoggingConfig struct {
 	MaxBackups int    `mapstructure:"max_backups"`
 	MaxAge     int    `mapstructure:"max_age"`
 	Compress   bool   `mapstructure:"compress"`
+}
+
+type AnalysisConfig struct {
+	Timeout   time.Duration `mapstructure:"timeout"`
+	VerifySSL bool          `mapstructure:"verify_ssl"`
 }
 
 // LoadConfig loads configuration from file and environment variables
@@ -102,6 +108,10 @@ func setDefaults() {
 	viper.SetDefault("logging.max_backups", 3)
 	viper.SetDefault("logging.max_age", 28)
 	viper.SetDefault("logging.compress", true)
+
+	// Analysis defaults
+	viper.SetDefault("analysis.timeout", 10)
+	viper.SetDefault("analysis.verify_ssl", false)
 }
 
 // validateConfig validates the configuration
@@ -109,6 +119,10 @@ func validateConfig(config *Config) error {
 	// Validate server config only (minimal scope)
 	if config.Server.Port <= 0 || config.Server.Port > 65535 {
 		return fmt.Errorf("invalid server port: %d", config.Server.Port)
+	}
+	// Validate analysis config
+	if config.Analysis.Timeout <= 0 || config.Analysis.Timeout >= 1000 {
+		return fmt.Errorf("invalid analysis timeout: %v", config.Analysis.Timeout)
 	}
 	return nil
 }

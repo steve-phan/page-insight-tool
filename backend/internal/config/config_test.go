@@ -133,6 +133,51 @@ func TestConfigValidation(t *testing.T) {
 	}
 }
 
+func TestAnalysisTimeoutValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		timeout     time.Duration
+		expectError bool
+	}{
+		{
+			name:        "valid timeout",
+			timeout:     10,
+			expectError: false,
+		},
+		{
+			name:        "invalid timeout - too low",
+			timeout:     0,
+			expectError: true,
+		},
+		{
+			name:        "invalid timeout - too high",
+			timeout:     1000,
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := &Config{
+				Server: ServerConfig{
+					Port: 8080,
+				},
+				Analysis: AnalysisConfig{
+					Timeout: tt.timeout,
+				},
+			}
+			err := validateConfig(config)
+			if tt.expectError && err == nil {
+				t.Errorf("expected error but got none")
+			}
+
+			if !tt.expectError && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestConfigMethods(t *testing.T) {
 	cfg := &Config{
 		Server: ServerConfig{
