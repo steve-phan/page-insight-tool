@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"page-insight-tool/internal/config"
+	domainerrors "page-insight-tool/internal/errors"
 	"page-insight-tool/internal/models"
 
 	"golang.org/x/net/html"
@@ -109,7 +110,7 @@ func (s *AnalyzerService) Analyze(ctx context.Context, rawURL string) (models.An
 func (s *AnalyzerService) analyzeHTML(raw string, base *url.URL) (models.AnalysisResponse, error) {
 	doc, err := html.Parse(strings.NewReader(raw))
 	if err != nil {
-		return models.AnalysisResponse{}, models.ErrHTMLParse
+		return models.AnalysisResponse{}, domainerrors.NewHTMLParseError(base.String(), err)
 	}
 
 	result := models.AnalysisResponse{
@@ -129,28 +130,28 @@ func (s *AnalyzerService) analyzeHTML(raw string, base *url.URL) (models.Analysi
 func (s *AnalyzerService) fetchHTML(ctx context.Context, u *url.URL) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return "", err
+		return "", domainerrors.ClassifyNetworkError(u.String(), err)
 	}
 	req.Header.Set("User-Agent", s.userAgent)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml")
 
 	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", domainerrors.ClassifyNetworkError(u.String(), err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("non-200 status code: %d", resp.StatusCode)
+		return "", domainerrors.ClassifyHTTPStatusError(u.String(), resp.StatusCode)
 	}
 
 	bodyReader := io.LimitReader(resp.Body, int64(s.cfg.Analysis.MaxBodySize)*1024*1024+1)
 	data, err := io.ReadAll(bodyReader)
 	if err != nil {
-		return "", err
+		return "", domainerrors.ClassifyNetworkError(u.String(), err)
 	}
 	if len(data) > int(s.cfg.Analysis.MaxBodySize*1024*1024) {
-		return "", models.ErrBodyTooLarge
+		return "", domainerrors.NewContentTooBigError(u.String(), int64(len(data)), int64(s.cfg.Analysis.MaxBodySize*1024*1024))
 	}
 	return string(data), nil
 }
@@ -160,7 +161,7 @@ func (s *AnalyzerService) fetchHTML(ctx context.Context, u *url.URL) (string, er
 // normalizeURL normalizes and validates a URL
 func normalizeURL(rawURL string) (*url.URL, error) {
 	if rawURL == "" {
-		return nil, models.ErrInvalidURL
+		return nil, domainerrors.NewInvalidURLError(rawURL, nil)
 	}
 
 	// Add https:// if no scheme is provided
@@ -170,11 +171,11 @@ func normalizeURL(rawURL string) (*url.URL, error) {
 
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, models.ErrInvalidURL
+		return nil, domainerrors.NewInvalidURLError(rawURL, err)
 	}
 
 	if u.Scheme == "" || u.Host == "" {
-		return nil, models.ErrInvalidURL
+		return nil, domainerrors.NewInvalidURLError(rawURL, nil)
 	}
 
 	return u, nil
@@ -184,7 +185,7 @@ func normalizeURL(rawURL string) (*url.URL, error) {
 func redirectPolicy(maxRedirects int) func(req *http.Request, via []*http.Request) error {
 	return func(req *http.Request, via []*http.Request) error {
 		if len(via) >= maxRedirects {
-			return fmt.Errorf("stopped after %d redirects", maxRedirects)
+			return domainerrors.NewInternalError(fmt.Sprintf("stopped after %d redirects", maxRedirects), nil)
 		}
 		return nil
 	}

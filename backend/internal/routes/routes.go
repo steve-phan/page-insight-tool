@@ -13,10 +13,14 @@ import (
 func SetupRoutes(handlerFactory *handlers.HandlerFactory) *gin.Engine {
 	router := gin.New()
 
-	// Global middleware
+	// Global middleware - ORDER MATTERS!
 	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-	// Basic hardening can be added later (security headers, body size limits)
+
+	// Use our custom recovery middleware instead of Gin's default
+	router.Use(handlerFactory.ErrorHandler().Recovery())
+
+	// Add our error handling middleware (should be last)
+	router.Use(handlerFactory.ErrorHandler().Middleware())
 
 	// API routes
 	setupAPIRoutes(router, handlerFactory)
