@@ -4,6 +4,7 @@ import (
 	"page-insight-tool/internal/config"
 	analyzer "page-insight-tool/internal/services/analyzer"
 	"page-insight-tool/internal/services/analyzer/extractors"
+	"page-insight-tool/internal/services/health"
 )
 
 // TestServiceFactory creates services suitable for testing infrastructure components
@@ -33,8 +34,12 @@ func (tsf *TestServiceFactory) CreateServices() (*Services, error) {
 		return nil, err
 	}
 
+	// Create health service
+	healthService := health.NewHealthService(tsf.config)
+
 	return &Services{
 		Config:   tsf.config,
 		Analyzer: analyzerService,
+		Health:   healthService,
 	}, nil
 }

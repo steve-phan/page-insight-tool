@@ -2,39 +2,16 @@ package handlers
 
 import (
 	"net/http"
-	"os"
-	"time"
 
 	"page-insight-tool/internal/config"
+	"page-insight-tool/internal/services/health"
 
 	"github.com/gin-gonic/gin"
 )
 
 // HealthHandler returns the health check handler
-func HealthHandler(cfg *config.Config) gin.HandlerFunc {
+func HealthHandler(healthService *health.HealthService, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":        "healthy",
-			"timestamp":     time.Now().UTC(),
-			"version":       getVersion(),
-			"build_date":    getBuildDate(),
-			"environment":   cfg.App.Environment,
-			"config_loaded": true,
-		})
+		c.JSON(http.StatusOK, healthService.CheckHealth())
 	}
-}
-
-// Version information - these will be set by the build system
-func getVersion() string {
-	if version := os.Getenv("VERSION"); version != "" {
-		return version
-	}
-	return "dev"
-}
-
-func getBuildDate() string {
-	if buildDate := os.Getenv("BUILD_DATE"); buildDate != "" {
-		return buildDate
-	}
-	return "unknown"
 }

@@ -5,6 +5,7 @@ import (
 	"page-insight-tool/internal/middleware"
 	"page-insight-tool/internal/services"
 	analyzer "page-insight-tool/internal/services/analyzer"
+	"page-insight-tool/internal/services/health"
 	"page-insight-tool/internal/validation"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ import (
 type HandlerFactory struct {
 	config       *config.Config
 	analyzer     *analyzer.AnalyzerService
+	health       *health.HealthService
 	errorHandler *middleware.ErrorHandler
 	urlValidator *validation.URLValidator
 }
@@ -24,6 +26,7 @@ func NewHandlerFactory(services *services.Services) *HandlerFactory {
 	return &HandlerFactory{
 		config:       services.Config,
 		analyzer:     services.Analyzer,
+		health:       services.Health,
 		errorHandler: middleware.NewErrorHandler(),
 		urlValidator: validation.NewURLValidator(),
 	}
@@ -36,7 +39,7 @@ func (hf *HandlerFactory) ErrorHandler() *middleware.ErrorHandler {
 
 // HealthHandler returns the health check handler
 func (hf *HandlerFactory) HealthHandler() gin.HandlerFunc {
-	return HealthHandler(hf.config)
+	return HealthHandler(hf.health, hf.config)
 }
 
 // AnalyzeHandler returns the analyze handler with error handling and validation
