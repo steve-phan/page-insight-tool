@@ -6,6 +6,7 @@ import (
 	"page-insight-tool/internal/config"
 	"page-insight-tool/internal/models"
 	analyzer "page-insight-tool/internal/services/analyzer"
+	"page-insight-tool/internal/services/analyzer/extractors"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,13 @@ func AnalyzeHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		service := analyzer.NewAnalyzerService(cfg)
+		service := analyzer.NewAnalyzerService(cfg, analyzer.WithExtractors(
+			&extractors.TitleExtractor{},
+			&extractors.HeadingsExtractor{},
+			&extractors.LinksExtractor{},
+			&extractors.LoginFormExtractor{},
+			&extractors.VersionExtractor{},
+		))
 
 		response, err := service.Analyze(c.Request.Context(), url)
 		if err != nil {

@@ -12,7 +12,6 @@ import (
 
 	"page-insight-tool/internal/config"
 	"page-insight-tool/internal/models"
-	"page-insight-tool/internal/services/analyzer/extractors"
 
 	"golang.org/x/net/html"
 )
@@ -37,13 +36,7 @@ type AnalyzerService struct {
 func NewAnalyzerService(cfg *config.Config, options ...AnalysisOption) *AnalyzerService {
 	// Default configuration
 	analyzerConfig := &AnalyzerConfig{
-		extractors: []Extractor{
-			&extractors.TitleExtractor{},
-			&extractors.HeadingsExtractor{},
-			&extractors.LinksExtractor{},
-			&extractors.LoginFormExtractor{},
-			&extractors.VersionExtractor{},
-		},
+		extractors: []Extractor{},
 	}
 
 	// Apply options

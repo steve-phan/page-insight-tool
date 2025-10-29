@@ -26,8 +26,14 @@ func TestAnalyzerService_BasicAnalysis(t *testing.T) {
 		},
 	}
 
-	// Test with default extractors
-	service := NewAnalyzerService(cfg)
+	// Test with explicit extractors for basic analysis
+	service := NewAnalyzerService(cfg,
+		WithExtractors(
+			&extractors.VersionExtractor{},
+			&extractors.TitleExtractor{},
+			&extractors.LoginFormExtractor{},
+		),
+	)
 
 	// Read test HTML file
 	htmlPath := filepath.Join("testdata", "sample.html")

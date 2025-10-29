@@ -65,10 +65,13 @@ func TestGetBuildDate(t *testing.T) {
 	buildDate := getBuildDate()
 	assert.Equal(t, "2023-01-01T00:00:00Z", buildDate)
 
-	// Test without environment variables
+	// Test without environment variables - should return current time in RFC1123 format
 	os.Unsetenv("BUILD_DATE")
 	buildDate = getBuildDate()
-	assert.Equal(t, "unknown", buildDate)
+	expectedBuildDate := time.Now().Local().Format(time.RFC1123)
+	// Should match RFC1123 format like "Wed, 29 Oct 2025 07:50:52 CET"
+	assert.Equal(t, expectedBuildDate, buildDate)
+
 }
 
 func TestServerStartStop(t *testing.T) {
