@@ -1,4 +1,4 @@
-import { AnalysisFormWrapper } from "@/components/AnalysisFormWrapper";
+import { AnalysisForm } from "@/components/AnalysisForm";
 import { AnalysisResults } from "@/components/AnalysisResults";
 import { Home24Logo } from "@/components/Home24Logo";
 import {
@@ -52,7 +52,7 @@ export default async function Home({ searchParams }: HomeProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <AnalysisFormWrapper initialUrl={url || ""} />
+            <AnalysisForm initialUrl={url || ""} />
           </CardContent>
         </Card>
 

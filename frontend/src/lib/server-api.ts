@@ -1,15 +1,16 @@
 import { HealthResponse } from "@/types/api";
 
-// For server-side rendering, ensure we strip any trailing /api/v1 from the base URL
-// since we add it in each endpoint method
-let API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.API_URL ||
-  "http://localhost:8080";
-// Remove trailing /api/v1 if present (common mistake)
-API_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
-// Remove trailing slash
-API_BASE_URL = API_BASE_URL.replace(/\/$/, "");
+// For server-side rendering, use NEXT_PUBLIC_API_URL (available on both client and server)
+function getApiBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+  // Remove trailing /api/v1 if present (common mistake)
+  let baseUrl = url.replace(/\/api\/v1\/?$/, "");
+  // Remove trailing slash
+  baseUrl = baseUrl.replace(/\/$/, "");
+
+  return baseUrl;
+}
 
 export class ServerApiClient {
   private static instance: ServerApiClient;
@@ -24,7 +25,9 @@ export class ServerApiClient {
   }
 
   private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Get API base URL dynamically for each request (in case env vars change)
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
 
     try {
       const response = await fetch(url, {

@@ -18,7 +18,7 @@ export function Home24Logo({ className }: LogoProps) {
   return (
     <button
       onClick={handleClick}
-      className={`transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded flex items-center ${className}`}
+      className={`transition-opacity hover:opacity-80 focus:outline-none cursor-pointer ${className}`}
       aria-label="Reset form and go to home"
     >
       <Image
