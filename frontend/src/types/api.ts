@@ -28,7 +28,7 @@ export interface AnalysisResponse {
     inaccessible: number;
   };
   has_login_form: boolean;
-  analysis_time: string;
+  analysis_time_ms: number;
 }
 
 export interface ApiError {

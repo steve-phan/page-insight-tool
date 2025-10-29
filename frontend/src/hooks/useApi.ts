@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { apiClient } from '@/lib/api';
+import { AnalysisResponse } from '@/types/api';
 
 export function useApi<T>() {
   const [data, setData] = useState<T | null>(null);
@@ -54,10 +55,10 @@ export function useHealth() {
 }
 
 export function useAnalysis() {
-  const { data, loading, error, execute } = useApi();
+  const { data, loading, error, execute } = useApi<AnalysisResponse>();
   
   const analyze = useCallback((url: string) => 
-    execute(() => apiClient.analyzeUrl({ url }))
+    execute(() => apiClient.analyzeUrl(url))
   , [execute]);
 
   return {

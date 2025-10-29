@@ -26,15 +26,13 @@ export class ApiClient {
 
   // Health check
   async getHealth(): Promise<HealthResponse> {
-    return this.fetch<HealthResponse>('/api/health');
+    return this.fetch<HealthResponse>('/api/v1/health');
   }
 
   // URL analysis
-  async analyzeUrl(request: AnalysisRequest): Promise<AnalysisResponse> {
-    return this.fetch<AnalysisResponse>('/api/v1/analyze', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+  async analyzeUrl(url: string): Promise<AnalysisResponse> {
+    const encodedUrl = encodeURIComponent(url);
+    return this.fetch<AnalysisResponse>(`/api/v1/analyze?url=${encodedUrl}`);
   }
 
   // Statistics

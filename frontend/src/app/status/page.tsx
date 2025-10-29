@@ -1,65 +1,65 @@
 import { fetchHealthData } from "@/lib/data/health";
 import { StatusCard } from "@/components/StatusCard";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle, Lightbulb } from "lucide-react";
 
 export default async function StatusPage() {
   const { data: healthData, error, timestamp } = await fetchHealthData();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <main className="container mx-auto px-4 py-12 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">
             🚀 Page Insight Tool Status
           </h1>
-          <p className="text-gray-600">Server health and system information</p>
+          <p className="text-lg text-muted-foreground">Server health and system information</p>
         </div>
 
         {/* Status Card Component */}
-        <StatusCard healthData={healthData!} renderedAt={timestamp} />
+        {healthData && <StatusCard healthData={healthData} renderedAt={timestamp} />}
 
         {/* Error Notice (if any) */}
         {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <span className="text-yellow-400">⚠️</span>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Data Fetch Warning
-                </h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <p>Using fallback data due to: {error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <Card className="mt-6 border-yellow-200 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                <AlertCircle className="h-5 w-5" />
+                Data Fetch Warning
+              </CardTitle>
+              <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                Using fallback data due to an error
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">{error}</p>
+            </CardContent>
+          </Card>
         )}
 
         {/* SSR Demonstration Note */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <span className="text-blue-400">💡</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-blue-800">
-                Production-Grade SSR Architecture
-              </h3>
-              <div className="mt-2 text-sm text-blue-700">
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Data fetching separated from UI components</li>
-                  <li>Centralized API client with singleton pattern</li>
-                  <li>Proper error handling and fallback data</li>
-                  <li>Reusable components for maintainability</li>
-                  <li>Type-safe data validation</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <Card className="mt-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+              <Lightbulb className="h-5 w-5" />
+              Production-Grade SSR Architecture
+            </CardTitle>
+            <CardDescription className="text-blue-700 dark:text-blue-300">
+              Demonstrating best practices for server-side rendering
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc list-inside space-y-2 text-sm text-blue-800 dark:text-blue-200">
+              <li>Data fetching separated from UI components</li>
+              <li>Centralized API client with singleton pattern</li>
+              <li>Proper error handling and fallback data</li>
+              <li>Reusable components for maintainability</li>
+              <li>Type-safe data validation</li>
+            </ul>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }

@@ -1,12 +1,21 @@
-import { HealthResponse } from '@/types/api';
+import { HealthResponse } from "@/types/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+// For server-side rendering, ensure we strip any trailing /api/v1 from the base URL
+// since we add it in each endpoint method
+let API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "http://localhost:8080";
+// Remove trailing /api/v1 if present (common mistake)
+API_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+// Remove trailing slash
+API_BASE_URL = API_BASE_URL.replace(/\/$/, "");
 
 export class ServerApiClient {
   private static instance: ServerApiClient;
-  
+
   private constructor() {}
-  
+
   public static getInstance(): ServerApiClient {
     if (!ServerApiClient.instance) {
       ServerApiClient.instance = new ServerApiClient();
@@ -16,42 +25,42 @@ export class ServerApiClient {
 
   private async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options?.headers,
         },
         // Ensure fresh data for SSR
-        cache: 'no-store',
+        cache: "no-store",
         ...options,
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error(`API Error [${endpoint}]:`, error);
       throw error;
     }
   }
 
   async getHealth(): Promise<HealthResponse> {
-    return this.fetch<HealthResponse>('/health');
+    return this.fetch<HealthResponse>("/api/v1/health");
   }
 
   async analyzeUrl(url: string): Promise<any> {
-    return this.fetch('/api/v1/analyze', {
-      method: 'POST',
-      body: JSON.stringify({ url }),
-    });
+    // URL is already decoded by Next.js searchParams, so we encode it here for the API call
+    const encodedUrl = encodeURIComponent(url);
+    return this.fetch(`/api/v1/analyze?url=${encodedUrl}`);
   }
 
   async getStats(): Promise<any> {
-    return this.fetch('/api/v1/stats');
+    return this.fetch("/api/v1/stats");
   }
 }
 

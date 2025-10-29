@@ -22,8 +22,6 @@ export async function fetchHealthData(): Promise<HealthDataResult> {
       timestamp,
     };
   } catch (error) {
-    console.error('Failed to fetch health data:', error);
-    
     // Return fallback data instead of throwing
     return {
       data: {
