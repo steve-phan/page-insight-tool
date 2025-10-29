@@ -10,6 +10,7 @@ type AnalysisResponse struct {
 	Headings     Headings `json:"headings"`
 	Links        Links    `json:"links"`
 	HasLoginForm bool     `json:"has_login_form" example:"true"`
+	AnalysisTime int64    `json:"analysis_time_ms" example:"150"`
 }
 
 type Headings struct {

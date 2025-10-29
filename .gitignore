@@ -9,6 +9,7 @@ backend/coverage.html
 backend/.env
 backend/.env.local
 backend/.env.*.local
+backend/docs/
 
 # Frontend specific
 frontend/node_modules/

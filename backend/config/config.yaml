@@ -29,6 +29,6 @@ logging:
   max_age: 28 # days
   compress: true
 analysis:
-  timeout: 10 # seconds
+  timeout: 30
   verify_ssl: false
   max_body_size: 10 # MB

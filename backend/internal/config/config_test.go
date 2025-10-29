@@ -95,6 +95,9 @@ func TestConfigValidation(t *testing.T) {
 				Server: ServerConfig{
 					Port: 8080,
 				},
+				Analysis: AnalysisConfig{
+					Timeout: 30,
+				},
 			},
 			expectError: false,
 		},
