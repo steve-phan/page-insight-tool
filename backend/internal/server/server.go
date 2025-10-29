@@ -10,49 +10,67 @@ import (
 	"time"
 
 	"page-insight-tool/internal/config"
+	"page-insight-tool/internal/handlers"
 	"page-insight-tool/internal/routes"
+	"page-insight-tool/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Server represents the HTTP server
 type Server struct {
-	config  *config.Config
-	router  *gin.Engine
-	httpSrv *http.Server
+	services *services.Services
+	handlers *handlers.HandlerFactory
+	router   *gin.Engine
+	httpSrv  *http.Server
 }
 
-// New creates a new server instance
-func New(cfg *config.Config) *Server {
+// New creates a new server instance following proper dependency flow:
+// Config → ServiceFactory → Services → HandlerFactory → Handlers → Routes → Server
+func New(cfg *config.Config) (*Server, error) {
+	// Create service factory
+	serviceFactory := services.NewServiceFactory(cfg)
+
+	// Create services with fail-fast validation
+	appServices, err := serviceFactory.CreateServices()
+	if err != nil {
+		return nil, err
+	}
+
 	// Set Gin mode based on environment
-	if cfg.IsProduction() {
+	if appServices.Config.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := routes.SetupRoutes(cfg)
+	// Initialize handlers with services (dependency injection)
+	handlerFactory := handlers.NewHandlerFactory(appServices)
+
+	// Initialize routes with handlers (clean dependency flow)
+	router := routes.SetupRoutes(handlerFactory)
 
 	httpSrv := &http.Server{
-		Addr:           cfg.GetAddress(),
+		Addr:           appServices.Config.GetAddress(),
 		Handler:        router,
-		ReadTimeout:    cfg.Server.ReadTimeout,
-		WriteTimeout:   cfg.Server.WriteTimeout,
-		IdleTimeout:    cfg.Server.IdleTimeout,
-		MaxHeaderBytes: cfg.Server.MaxHeaderBytes,
+		ReadTimeout:    appServices.Config.Server.ReadTimeout,
+		WriteTimeout:   appServices.Config.Server.WriteTimeout,
+		IdleTimeout:    appServices.Config.Server.IdleTimeout,
+		MaxHeaderBytes: appServices.Config.Server.MaxHeaderBytes,
 	}
 
 	return &Server{
-		config:  cfg,
-		router:  router,
-		httpSrv: httpSrv,
-	}
+		services: appServices,
+		handlers: handlerFactory,
+		router:   router,
+		httpSrv:  httpSrv,
+	}, nil
 }
 
 // Start starts the server
 func (s *Server) Start() error {
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Starting %s v%s on %s", s.config.App.Name, getVersion(), s.config.GetAddress())
-		log.Printf("Environment: %s", s.config.App.Environment)
+		log.Printf("Starting %s v%s on %s", s.services.Config.App.Name, getVersion(), s.services.Config.GetAddress())
+		log.Printf("Environment: %s", s.services.Config.App.Environment)
 		log.Printf("Build date: %s", getBuildDate())
 
 		if err := s.httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

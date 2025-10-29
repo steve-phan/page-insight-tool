@@ -6,9 +6,12 @@ import (
 	"testing"
 
 	"page-insight-tool/internal/config"
+	"page-insight-tool/internal/handlers"
+	"page-insight-tool/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSetupRoutes(t *testing.T) {
@@ -21,9 +24,15 @@ func TestSetupRoutes(t *testing.T) {
 		},
 	}
 
-	router := SetupRoutes(cfg)
+	// Create services using test factory (avoids fail-fast for infrastructure tests)
+	serviceFactory := services.NewTestServiceFactory(cfg)
+	srvs, err := serviceFactory.CreateServices()
+	require.NoError(t, err)
 
-	// Test health endpoint
+	// Create handler factory
+	handlerFactory := handlers.NewHandlerFactory(srvs)
+
+	router := SetupRoutes(handlerFactory) // Test health endpoint
 	t.Run("health_endpoint", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v1/health", nil)
 		w := httptest.NewRecorder()
@@ -59,7 +68,16 @@ func TestMiddlewareSetup(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	cfg := &config.Config{}
-	router := SetupRoutes(cfg)
+
+	// Create services using test factory (avoids fail-fast for infrastructure tests)
+	serviceFactory := services.NewTestServiceFactory(cfg)
+	srvs, err := serviceFactory.CreateServices()
+	require.NoError(t, err)
+
+	// Create handler factory
+	handlerFactory := handlers.NewHandlerFactory(srvs)
+
+	router := SetupRoutes(handlerFactory)
 
 	// Test that middleware is applied by checking if recovery works
 	t.Run("panic_recovery", func(t *testing.T) {
@@ -83,7 +101,16 @@ func TestAPIRoutesGroup(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	cfg := &config.Config{}
-	router := SetupRoutes(cfg)
+
+	// Create services using test factory (avoids fail-fast for infrastructure tests)
+	serviceFactory := services.NewTestServiceFactory(cfg)
+	srvs, err := serviceFactory.CreateServices()
+	require.NoError(t, err)
+
+	// Create handler factory
+	handlerFactory := handlers.NewHandlerFactory(srvs)
+
+	router := SetupRoutes(handlerFactory)
 
 	// Test that API routes are properly grouped under /api/v1
 	apiRoutes := []struct {

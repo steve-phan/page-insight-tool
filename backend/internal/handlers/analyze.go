@@ -3,17 +3,15 @@ package handlers
 import (
 	"net/http"
 	"net/url"
-	"page-insight-tool/internal/config"
 	"page-insight-tool/internal/models"
 	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/services/analyzer/extractors"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// AnalyzeHandler handles URL analysis requests with configurable extractors
-func AnalyzeHandler(cfg *config.Config) gin.HandlerFunc {
+// AnalyzeHandler handles URL analysis requests with pre-configured analyzer service
+func AnalyzeHandler(analyzerService *analyzer.AnalyzerService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		url := c.Query("url")
 		if url == "" {
@@ -28,15 +26,8 @@ func AnalyzeHandler(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		service := analyzer.NewAnalyzerService(cfg, analyzer.WithExtractors(
-			&extractors.TitleExtractor{},
-			&extractors.HeadingsExtractor{},
-			&extractors.LinksExtractor{},
-			&extractors.LoginFormExtractor{},
-			&extractors.VersionExtractor{},
-		))
-
-		response, err := service.Analyze(c.Request.Context(), url)
+		// Use the pre-configured analyzer service (dependency injection)
+		response, err := analyzerService.Analyze(c.Request.Context(), url)
 		if err != nil {
 			// Determine error type based on the error message
 			errorResponse := determineErrorType(err)

@@ -3,14 +3,14 @@ package routes
 import (
 	"net/http"
 
-	"page-insight-tool/internal/config"
 	"page-insight-tool/internal/handlers"
 
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes configures all application routes
-func SetupRoutes(cfg *config.Config) *gin.Engine {
+// SetupRoutes configures all application routes with handler factory
+// This follows clean dependency flow: Services → Handlers → Routes
+func SetupRoutes(handlerFactory *handlers.HandlerFactory) *gin.Engine {
 	router := gin.New()
 
 	// Global middleware
@@ -19,7 +19,7 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	// Basic hardening can be added later (security headers, body size limits)
 
 	// API routes
-	setupAPIRoutes(router, cfg)
+	setupAPIRoutes(router, handlerFactory)
 
 	// Handle OPTIONS requests globally
 	router.OPTIONS("/*path", func(c *gin.Context) { c.Status(http.StatusNoContent) })
@@ -27,11 +27,11 @@ func SetupRoutes(cfg *config.Config) *gin.Engine {
 	return router
 }
 
-// setupAPIRoutes configures API v1 routes
-func setupAPIRoutes(router *gin.Engine, cfg *config.Config) {
+// setupAPIRoutes configures API v1 routes with handler factory
+func setupAPIRoutes(router *gin.Engine, handlerFactory *handlers.HandlerFactory) {
 	api := router.Group("/api/v1")
 	{
-		api.GET("/health", handlers.HealthHandler(cfg))
-		api.GET("/analyze", handlers.AnalyzeHandler(cfg))
+		api.GET("/health", handlerFactory.HealthHandler())
+		api.GET("/analyze", handlerFactory.AnalyzeHandler())
 	}
 }

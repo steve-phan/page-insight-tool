@@ -33,7 +33,7 @@ type AnalyzerService struct {
 }
 
 // NewAnalyzerService creates a new analyzer service
-func NewAnalyzerService(cfg *config.Config, options ...AnalysisOption) *AnalyzerService {
+func NewAnalyzerService(cfg *config.Config, options ...AnalysisOption) (*AnalyzerService, error) {
 	// Default configuration
 	analyzerConfig := &AnalyzerConfig{
 		extractors: []Extractor{},
@@ -42,6 +42,10 @@ func NewAnalyzerService(cfg *config.Config, options ...AnalysisOption) *Analyzer
 	// Apply options
 	for _, option := range options {
 		option(analyzerConfig)
+	}
+
+	if len(analyzerConfig.extractors) == 0 {
+		return nil, fmt.Errorf("no extractors configured: at least one extractor must be provided")
 	}
 
 	transport := &http.Transport{
@@ -66,7 +70,7 @@ func NewAnalyzerService(cfg *config.Config, options ...AnalysisOption) *Analyzer
 		httpClient: client,
 		userAgent:  cfg.App.Name,
 		config:     analyzerConfig,
-	}
+	}, nil
 }
 
 // Functional Options

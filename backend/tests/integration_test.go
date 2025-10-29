@@ -20,7 +20,9 @@ func TestServerLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create server
-	srv := server.New(cfg)
+
+	srv, err := server.NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test server start
@@ -49,7 +51,8 @@ func TestServerGracefulShutdown(t *testing.T) {
 	cfg, err := config.LoadConfig(configPath)
 	require.NoError(t, err)
 
-	srv := server.New(cfg)
+	srv, err := server.NewForTesting(cfg)
+	require.NoError(t, err)
 	err = srv.Start()
 	require.NoError(t, err)
 
@@ -81,7 +84,8 @@ func TestServerWithInvalidConfig(t *testing.T) {
 	}
 
 	// This should not panic, but server might fail to start
-	srv := server.New(cfg)
+	srv, err := server.NewForTesting(cfg)
+	require.NoError(t, err)
 	assert.NotNil(t, srv)
 }
 
@@ -89,7 +93,8 @@ func TestConcurrentRequests(t *testing.T) {
 	cfg, err := config.LoadConfig(configPath)
 	require.NoError(t, err)
 
-	srv := server.New(cfg)
+	srv, err := server.NewForTesting(cfg)
+	require.NoError(t, err)
 	err = srv.Start()
 	require.NoError(t, err)
 	defer srv.Stop()

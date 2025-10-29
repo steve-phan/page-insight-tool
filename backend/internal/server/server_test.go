@@ -22,13 +22,14 @@ func TestNew(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
 
+	require.NoError(t, err)
 	assert.NotNil(t, srv)
-	assert.NotNil(t, srv.config)
+	assert.NotNil(t, srv.services)
+	assert.NotNil(t, srv.handlers)
 	assert.NotNil(t, srv.router)
 	assert.NotNil(t, srv.httpSrv)
-	assert.Equal(t, cfg, srv.config)
 }
 
 func TestNewProductionMode(t *testing.T) {
@@ -38,7 +39,8 @@ func TestNewProductionMode(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	assert.NotNil(t, srv)
 
 }
@@ -85,11 +87,12 @@ func TestServerStartStop(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test start
-	err := srv.Start()
+	err = srv.Start()
 	assert.NoError(t, err)
 
 	// Wait a bit for server to start
@@ -111,11 +114,12 @@ func TestServerStopWithoutStart(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test stop without start (should not panic)
-	err := srv.Stop()
+	err = srv.Stop()
 	assert.NoError(t, err)
 }
 
@@ -130,10 +134,11 @@ func TestServerMultipleStops(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
-	err := srv.Start()
+	err = srv.Start()
 	require.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
@@ -160,10 +165,11 @@ func TestServerWithTimeout(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
-	err := srv.Start()
+	err = srv.Start()
 	assert.NoError(t, err)
 
 	time.Sleep(100 * time.Millisecond)
@@ -180,7 +186,8 @@ func TestServerAddress(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test that the server address is correctly set
@@ -195,7 +202,8 @@ func TestServerHandler(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test that the handler is set
@@ -211,7 +219,8 @@ func TestServerTimeouts(t *testing.T) {
 		},
 	}
 
-	srv := New(cfg)
+	srv, err := NewForTesting(cfg)
+	require.NoError(t, err)
 	require.NotNil(t, srv)
 
 	// Test that timeouts are correctly set

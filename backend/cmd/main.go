@@ -14,8 +14,14 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Create and start server
-	srv := server.New(cfg)
+	// Create server with dependency injection and fail-fast validation
+	// The server handles: Config → ServiceFactory → Services → HandlerFactory → Routes
+	srv, err := server.New(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize server: %v", err)
+	}
+
+	// Start server
 	if err := srv.Start(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

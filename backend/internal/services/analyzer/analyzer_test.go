@@ -27,13 +27,16 @@ func TestAnalyzerService_BasicAnalysis(t *testing.T) {
 	}
 
 	// Test with explicit extractors for basic analysis
-	service := NewAnalyzerService(cfg,
+	service, err := NewAnalyzerService(cfg,
 		WithExtractors(
 			&extractors.VersionExtractor{},
 			&extractors.TitleExtractor{},
 			&extractors.LoginFormExtractor{},
 		),
 	)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer service: %v", err)
+	}
 
 	// Read test HTML file
 	htmlPath := filepath.Join("testdata", "sample.html")
@@ -74,13 +77,16 @@ func TestAnalyzerService_CustomExtractors(t *testing.T) {
 	}
 
 	// Test with custom extractors
-	service := NewAnalyzerService(cfg,
+	service, err := NewAnalyzerService(cfg,
 		WithExtractors(
 			&extractors.TitleExtractor{},
 			&extractors.HeadingsExtractor{},
 			// Only title and headings, no links or login forms
 		),
 	)
+	if err != nil {
+		t.Fatalf("Failed to create analyzer service: %v", err)
+	}
 
 	htmlPath := filepath.Join("testdata", "sample.html")
 	htmlContent, err := os.ReadFile(htmlPath)
@@ -122,32 +128,15 @@ func TestAnalyzerService_EmptyExtractors(t *testing.T) {
 		},
 	}
 
-	// Test with no extractors
-	service := NewAnalyzerService(cfg,
+	// Test with no extractors - should fail fast
+	_, err := NewAnalyzerService(cfg,
 		WithExtractors(), // Empty extractors
 	)
-
-	htmlPath := filepath.Join("testdata", "sample.html")
-	htmlContent, err := os.ReadFile(htmlPath)
-	if err != nil {
-		t.Fatalf("Failed to read test file: %v", err)
+	if err == nil {
+		t.Errorf("Expected error when creating service with no extractors, but got none")
 	}
-
-	testURL, _ := url.Parse("https://example.com")
-	result, err := service.analyzeHTML(string(htmlContent), testURL)
-	if err != nil {
-		t.Fatalf("Analyze failed: %v", err)
-	}
-
-	// Should not have any data without extractors
-	if result.HTMLVersion != "" {
-		t.Errorf("Should not have HTML version without VersionExtractor")
-	}
-	if result.PageTitle != "" {
-		t.Errorf("Should not have title without TitleExtractor")
-	}
-	if result.Headings.H1 != 0 {
-		t.Errorf("Should not have headings without HeadingsExtractor")
+	if !strings.Contains(err.Error(), "no extractors configured") {
+		t.Errorf("Expected specific error message about extractors, got: %v", err)
 	}
 }
 
