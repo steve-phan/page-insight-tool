@@ -32,3 +32,9 @@ analysis:
   timeout: 30
   verify_ssl: false
   max_body_size: 10 # MB
+
+# Rate Limiting Configuration
+rate_limit:
+  enabled: true
+  requests: 10 # requests per window
+  window: 10s # time window (e.g., 1m, 5m, 1h)

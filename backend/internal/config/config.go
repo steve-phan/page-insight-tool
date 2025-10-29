@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	App      AppConfig      `mapstructure:"app"`
-	Logging  LoggingConfig  `mapstructure:"logging"`
-	Analysis AnalysisConfig `mapstructure:"analysis"`
+	Server    ServerConfig    `mapstructure:"server"`
+	App       AppConfig       `mapstructure:"app"`
+	Logging   LoggingConfig   `mapstructure:"logging"`
+	Analysis  AnalysisConfig  `mapstructure:"analysis"`
+	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
 }
 
 // ServerConfig holds server-related configuration
@@ -50,6 +51,13 @@ type AnalysisConfig struct {
 	Timeout     time.Duration `mapstructure:"timeout"`
 	VerifySSL   bool          `mapstructure:"verify_ssl"`
 	MaxBodySize int64         `mapstructure:"max_body_size"`
+}
+
+// RateLimitConfig holds rate limiting configuration
+type RateLimitConfig struct {
+	Enabled  bool          `mapstructure:"enabled"`
+	Requests int           `mapstructure:"requests"`
+	Window   time.Duration `mapstructure:"window"`
 }
 
 // LoadConfig loads configuration from file and environment variables
@@ -114,6 +122,11 @@ func setDefaults() {
 	viper.SetDefault("analysis.timeout", 10)
 	viper.SetDefault("analysis.verify_ssl", false)
 	viper.SetDefault("analysis.max_body_size", int64(10))
+
+	// Rate limit defaults
+	viper.SetDefault("rate_limit.enabled", true)
+	viper.SetDefault("rate_limit.requests", 60)
+	viper.SetDefault("rate_limit.window", "1m")
 }
 
 // validateConfig validates the configuration
@@ -125,6 +138,15 @@ func validateConfig(config *Config) error {
 	// Validate analysis config
 	if config.Analysis.Timeout <= 0 || config.Analysis.Timeout >= 1000 {
 		return fmt.Errorf("invalid analysis timeout: %v", config.Analysis.Timeout)
+	}
+	// Validate rate limit config
+	if config.RateLimit.Enabled {
+		if config.RateLimit.Requests <= 0 {
+			return fmt.Errorf("invalid rate limit requests: %d", config.RateLimit.Requests)
+		}
+		if config.RateLimit.Window <= 0 {
+			return fmt.Errorf("invalid rate limit window: %v", config.RateLimit.Window)
+		}
 	}
 	return nil
 }

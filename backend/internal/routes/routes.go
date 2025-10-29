@@ -2,8 +2,10 @@ package routes
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/steve-phan/page-insight-tool/internal/handlers"
+	"github.com/steve-phan/page-insight-tool/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,7 +37,16 @@ func SetupRoutes(handlerFactory *handlers.HandlerFactory) *gin.Engine {
 func setupAPIRoutes(router *gin.Engine, handlerFactory *handlers.HandlerFactory) {
 	api := router.Group("/api/v1")
 	{
-		api.GET("/health", handlerFactory.HealthHandler())
-		api.GET("/analyze", handlerFactory.AnalyzeHandler())
+		// Health endpoint: More lenient rate limit (100 requests per minute)
+		healthGroup := api.Group("/health")
+		healthRateLimiter := middleware.NewRateLimiter(100, 1*time.Minute)
+		healthGroup.Use(healthRateLimiter.Middleware())
+		healthGroup.GET("", handlerFactory.HealthHandler())
+
+		// Analyze endpoint: Stricter rate limit (10 requests per 10 seconds)
+		analyzeGroup := api.Group("/analyze")
+		analyzeRateLimiter := middleware.NewRateLimiter(10, 10*time.Second)
+		analyzeGroup.Use(analyzeRateLimiter.Middleware())
+		analyzeGroup.GET("", handlerFactory.AnalyzeHandler())
 	}
 }
