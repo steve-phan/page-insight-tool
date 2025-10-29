@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/services/health"
 
 	"github.com/gin-gonic/gin"
 )

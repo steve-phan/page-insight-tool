@@ -1,9 +1,9 @@
 package services
 
 import (
-	"page-insight-tool/internal/config"
-	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
+	"github.com/steve-phan/page-insight-tool/internal/services/health"
 )
 
 // Services holds all application services

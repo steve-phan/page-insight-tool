@@ -3,9 +3,9 @@ package services
 import (
 	"fmt"
 
-	"page-insight-tool/internal/config"
-	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/services/analyzer/extractors"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
+	"github.com/steve-phan/page-insight-tool/internal/services/analyzer/extractors"
 )
 
 // ServiceFactory handles creation and validation of all application services

@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 )
 
 // ErrorMapper handles conversion from domain errors to HTTP responses

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 
 	"golang.org/x/net/html"
 )

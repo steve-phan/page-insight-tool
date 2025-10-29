@@ -2,7 +2,7 @@ package health
 
 import (
 	"os"
-	"page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/config"
 	"time"
 )
 

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/models"
-	"page-insight-tool/internal/services/analyzer/extractors"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/services/analyzer/extractors"
 
 	"golang.org/x/net/html"
 )

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"page-insight-tool/internal/errors"
+	"github.com/steve-phan/page-insight-tool/internal/errors"
 )
 
 // URLValidator handles URL validation logic

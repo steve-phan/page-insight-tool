@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 
 	"golang.org/x/net/html"
 )

@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"page-insight-tool/internal/handlers"
+	"github.com/steve-phan/page-insight-tool/internal/handlers"
 
 	"github.com/gin-gonic/gin"
 )

@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"page-insight-tool/internal/middleware"
-	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/validation"
+	"github.com/steve-phan/page-insight-tool/internal/middleware"
+	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
+	"github.com/steve-phan/page-insight-tool/internal/validation"
 
 	"github.com/gin-gonic/gin"
 )

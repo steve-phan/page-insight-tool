@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/middleware"
-	"page-insight-tool/internal/services"
-	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/services/health"
-	"page-insight-tool/internal/validation"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/middleware"
+	"github.com/steve-phan/page-insight-tool/internal/services"
+	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
+	"github.com/steve-phan/page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/validation"
 
 	"github.com/gin-gonic/gin"
 )

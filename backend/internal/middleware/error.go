@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"page-insight-tool/internal/errors"
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/errors"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 
 	"github.com/gin-gonic/gin"
 )

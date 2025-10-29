@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

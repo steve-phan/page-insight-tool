@@ -1,10 +1,10 @@
 package services
 
 import (
-	"page-insight-tool/internal/config"
-	analyzer "page-insight-tool/internal/services/analyzer"
-	"page-insight-tool/internal/services/analyzer/extractors"
-	"page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
+	"github.com/steve-phan/page-insight-tool/internal/services/analyzer/extractors"
+	"github.com/steve-phan/page-insight-tool/internal/services/health"
 )
 
 // TestServiceFactory creates services suitable for testing infrastructure components

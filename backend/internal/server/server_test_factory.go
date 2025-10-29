@@ -3,10 +3,10 @@ package server
 import (
 	"net/http"
 
-	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/handlers"
-	"page-insight-tool/internal/routes"
-	"page-insight-tool/internal/services"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/handlers"
+	"github.com/steve-phan/page-insight-tool/internal/routes"
+	"github.com/steve-phan/page-insight-tool/internal/services"
 
 	"github.com/gin-gonic/gin"
 )

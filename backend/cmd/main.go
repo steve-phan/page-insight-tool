@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"page-insight-tool/internal/config"
-	"page-insight-tool/internal/server"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	"github.com/steve-phan/page-insight-tool/internal/server"
 )
 
 func main() {

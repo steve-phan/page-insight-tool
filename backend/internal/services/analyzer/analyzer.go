@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"page-insight-tool/internal/config"
-	domainerrors "page-insight-tool/internal/errors"
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/config"
+	domainerrors "github.com/steve-phan/page-insight-tool/internal/errors"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 
 	"golang.org/x/net/html"
 )

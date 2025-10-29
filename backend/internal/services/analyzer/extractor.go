@@ -3,7 +3,7 @@ package analyzer
 import (
 	"net/url"
 
-	"page-insight-tool/internal/models"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 
 	"golang.org/x/net/html"
 )
