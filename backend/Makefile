@@ -1,4 +1,4 @@
-.PHONY: build run test test-coverage clean deps tools docker-build docker-run dev fmt vet lint check
+.PHONY: build run test test-coverage clean deps tools docker-build docker-run dev fmt vet lint check swagger swagger-serve
 
 # Application variables
 APP_NAME = page-insight-tool
@@ -102,6 +102,20 @@ clean:
 	rm -rf $(BIN_DIR)/
 	rm -f coverage.out coverage.html
 
+# Generate Swagger documentation
+swagger:
+	@echo "Generating Swagger documentation..."
+	@which swag > /dev/null || (echo "swag not found. Installing..." && go install github.com/swaggo/swag/cmd/swag@latest)
+	swag init -g cmd/main.go -o ./docs/api --parseDependency --parseInternal --parseDepth 2
+	@echo "Converting to OpenAPI 3.0..."
+	@which swag2openapi > /dev/null || (echo "swag2openapi not found. Installing..." && go install github.com/swaggo/swag/cmd/swag2openapi@latest)
+	swag2openapi ./docs/api/swagger.json -o ./docs/api/openapi.json
+
+# Serve Swagger UI (requires running server)
+swagger-serve:
+	@echo "Swagger UI available at http://localhost:8080/swagger/index.html"
+	@echo "Make sure the server is running first!"
+
 # Help
 help:
 	@echo "Available targets:"
@@ -123,4 +137,6 @@ help:
 	@echo "  docker-build  - Build Docker image"
 	@echo "  docker-run    - Build and run Docker container"
 	@echo "  clean         - Clean build artifacts"
+	@echo "  swagger       - Generate Swagger/OpenAPI documentation"
+	@echo "  swagger-serve - Display Swagger UI URL (requires running server)"
 	@echo "  help          - Show this help"

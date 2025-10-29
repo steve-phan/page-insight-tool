@@ -6,8 +6,11 @@ import (
 
 	"github.com/steve-phan/page-insight-tool/internal/handlers"
 	"github.com/steve-phan/page-insight-tool/internal/middleware"
+	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRoutes configures all application routes with handler factory
@@ -23,6 +26,9 @@ func SetupRoutes(handlerFactory *handlers.HandlerFactory) *gin.Engine {
 
 	// Add our error handling middleware (should be last)
 	router.Use(handlerFactory.ErrorHandler().Middleware())
+
+	// Swagger documentation endpoint
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API routes
 	setupAPIRoutes(router, handlerFactory)

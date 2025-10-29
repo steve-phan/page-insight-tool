@@ -150,6 +150,8 @@ func (eh *ErrorHandler) sendErrorResponse(c *gin.Context, httpError *models.HTTP
 
 // Recovery middleware for panic handling
 func (eh *ErrorHandler) Recovery() gin.HandlerFunc {
+	// Capture errorHandler in closure to avoid nil pointer issues
+	errorHandler := eh
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
 		// Convert panic to error
 		err := &errors.DomainError{
@@ -162,6 +164,19 @@ func (eh *ErrorHandler) Recovery() gin.HandlerFunc {
 		}
 
 		// Handle the error through normal error handling
-		eh.HandleError(c, err)
+		// Use captured errorHandler to avoid nil pointer issues
+		if errorHandler != nil {
+			errorHandler.HandleError(c, err)
+		} else {
+			// Fallback if errorHandler is nil (shouldn't happen, but safety first)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal server error",
+				"message": "Panic occurred but error handler is unavailable",
+				"details": map[string]interface{}{
+					"panic": recovered,
+				},
+			})
+			c.Abort()
+		}
 	})
 }

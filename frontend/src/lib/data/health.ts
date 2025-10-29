@@ -29,8 +29,7 @@ export async function fetchHealthData(): Promise<HealthDataResult> {
         timestamp: new Date().toISOString(),
         version: 'unknown',
         build_date: 'unknown',
-        git_commit: 'unknown',
-        uptime: 'unknown',
+        environment: 'unknown',
       },
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp,
@@ -47,8 +46,6 @@ export function validateHealthData(data: any): data is HealthResponse {
     typeof data.status === 'string' &&
     typeof data.timestamp === 'string' &&
     typeof data.version === 'string' &&
-    typeof data.build_date === 'string' &&
-    typeof data.git_commit === 'string' &&
-    typeof data.uptime === 'string'
+    typeof data.build_date === 'string'
   );
 }

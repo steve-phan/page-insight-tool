@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate:types": "swagger-typescript-api generate -p ../backend/docs/api/swagger.json -o ./src/types -n api.generated.ts --modular",
+    "generate:types:remote": "swagger-typescript-api generate -p http://localhost:8080/swagger/doc.json -o ./src/types -n api.generated.ts --modular",
+    "generate:api": "swagger-typescript-api generate -p ../backend/docs/api/swagger.json -o ./src/lib/api/generated -n api.ts --modular --axios",
+    "generate:all": "npm run generate:types"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -24,12 +28,15 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.86.8",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
+    "openapi-typescript": "^7.10.1",
+    "swagger-typescript-api": "^13.2.16",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

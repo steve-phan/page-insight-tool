@@ -9,11 +9,12 @@ backend/coverage.html
 backend/.env
 backend/.env.local
 backend/.env.*.local
-backend/docs/
-
+ 
 # Frontend specific
 frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/dist/
 
+# Dev docs
+docs/

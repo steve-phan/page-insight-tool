@@ -14,9 +14,9 @@ import {
   AlertCircle,
   Server,
   Calendar,
-  GitCommit,
   Clock,
   Activity,
+  Globe,
 } from "lucide-react";
 
 interface StatusCardProps {
@@ -24,7 +24,7 @@ interface StatusCardProps {
   renderedAt: string;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status?: string }) {
   if (status === "healthy") {
     return (
       <Badge variant="default" className="bg-green-500 hover:bg-green-600">
@@ -71,7 +71,17 @@ export function StatusCard({ healthData, renderedAt }: StatusCardProps) {
                 Version
               </Label>
               <p className="text-lg font-semibold font-mono">
-                {healthData.version}
+                {healthData.version || "Unknown"}
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
+                <Globe className="h-4 w-4" />
+                Environment
+              </Label>
+              <p className="text-lg font-semibold capitalize">
+                {healthData.environment || "Unknown"}
               </p>
             </div>
 
@@ -81,19 +91,9 @@ export function StatusCard({ healthData, renderedAt }: StatusCardProps) {
                 Build Date
               </Label>
               <p className="text-lg font-semibold">
-                {healthData.build_date !== "unknown"
+                {healthData.build_date && healthData.build_date !== "unknown"
                   ? new Date(healthData.build_date).toLocaleString()
                   : "Unknown"}
-              </p>
-            </div>
-
-            <div>
-              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
-                <GitCommit className="h-4 w-4" />
-                Git Commit
-              </Label>
-              <p className="text-sm font-mono text-muted-foreground break-all">
-                {healthData.git_commit}
               </p>
             </div>
           </div>
@@ -105,16 +105,10 @@ export function StatusCard({ healthData, renderedAt }: StatusCardProps) {
                 Server Time
               </Label>
               <p className="text-lg font-semibold">
-                {new Date(healthData.timestamp).toLocaleString()}
+                {healthData.timestamp
+                  ? new Date(healthData.timestamp).toLocaleString()
+                  : "Unknown"}
               </p>
-            </div>
-
-            <div>
-              <Label className="text-muted-foreground flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4" />
-                Uptime
-              </Label>
-              <p className="text-lg font-semibold">{healthData.uptime}</p>
             </div>
 
             <div>

@@ -1,38 +1,23 @@
-export interface HealthResponse {
-  status: string;
-  timestamp: string;
-  version: string;
-  build_date: string;
-  git_commit: string;
-  uptime: string;
-}
+// Re-export generated types with cleaner names
+import type {
+  HealthHealthResponse,
+  ModelsAnalysisResponse,
+  ModelsHeadings,
+  ModelsLinks,
+  ModelsHTTPError,
+} from "./data-contracts";
 
-export interface AnalysisRequest {
+export type {
+  HealthHealthResponse as HealthResponse,
+  ModelsAnalysisResponse as AnalysisResponse,
+  ModelsHeadings as Headings,
+  ModelsLinks as Links,
+  ModelsHTTPError as HTTPError,
+};
+
+// For backward compatibility, export the same types
+export type AnalysisRequest = {
   url: string;
-}
+};
 
-export interface AnalysisResponse {
-  html_version: string;
-  page_title: string;
-  headings: {
-    h1: number;
-    h2: number;
-    h3: number;
-    h4: number;
-    h5: number;
-    h6: number;
-  };
-  links: {
-    internal: number;
-    external: number;
-    inaccessible: number;
-  };
-  has_login_form: boolean;
-  analysis_time_ms: number;
-}
-
-export interface ApiError {
-  message: string;
-  code: string;
-  details?: string;
-}
+export type ApiError = ModelsHTTPError;

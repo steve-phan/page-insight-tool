@@ -2,8 +2,9 @@ package health
 
 import (
 	"os"
-	"github.com/steve-phan/page-insight-tool/internal/config"
 	"time"
+
+	"github.com/steve-phan/page-insight-tool/internal/config"
 )
 
 type HealthService struct {
@@ -13,13 +14,31 @@ type HealthService struct {
 func NewHealthService(cfg *config.Config) *HealthService {
 	return &HealthService{cfg: cfg}
 }
-func (hs *HealthService) CheckHealth() map[string]string {
-	return map[string]string{
-		"status":      "healthy",
-		"timestamp":   time.Now().UTC().String(),
-		"version":     getVersion(),
-		"build_date":  getBuildDate(),
-		"environment": hs.cfg.App.Environment,
+
+// HealthResponse represents the health check response
+type HealthResponse struct {
+	Status      string `json:"status" example:"healthy"`
+	Timestamp   string `json:"timestamp" example:"2025-10-29T22:00:00Z"`
+	Version     string `json:"version" example:"1.0.0"`
+	BuildDate   string `json:"build_date" example:"2025-10-29T22:00:00Z"`
+	Environment string `json:"environment" example:"development"`
+}
+
+func (hs *HealthService) CheckHealth() HealthResponse {
+	environment := "unknown"
+	if hs != nil && hs.cfg != nil {
+		environment = hs.cfg.App.Environment
+		if environment == "" {
+			environment = "unknown"
+		}
+	}
+
+	return HealthResponse{
+		Status:      "healthy",
+		Timestamp:   time.Now().UTC().String(),
+		Version:     getVersion(),
+		BuildDate:   getBuildDate(),
+		Environment: environment,
 	}
 }
 

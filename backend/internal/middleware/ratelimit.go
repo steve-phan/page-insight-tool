@@ -84,6 +84,7 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 		// Check if limit exceeded
 		if v.count >= rl.rate {
 			v.lastSeen = time.Now()
+
 			c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", rl.rate))
 			c.Header("X-RateLimit-Remaining", "0")
 			c.Header("Retry-After", fmt.Sprintf("%d", int(rl.window.Seconds())))
