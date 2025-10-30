@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: page-insight-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - page-insight-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: page-insight-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - PIT_SERVER_PORT=8080
+      - PIT_APP_ENVIRONMENT=production
+      - PIT_REDIS_HOST=redis
+      - PIT_REDIS_PORT=6379
+    volumes:
+      - ./backend/config:/app/config
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - page-insight-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O /dev/null http://localhost:8080/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8080
+    container_name: page-insight-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - page-insight-network
+
+
+networks:
+  page-insight-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+
