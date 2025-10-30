@@ -1,0 +1,7 @@
+# Backend Docker ignore
+bin/
+*.test
+*.log
+.vscode/
+.idea/
+

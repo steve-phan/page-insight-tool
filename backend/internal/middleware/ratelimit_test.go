@@ -251,7 +251,7 @@ func TestRedisRateLimiter_WindowExpiration(t *testing.T) {
 	}
 
 	router := gin.New()
-	router.Use(limiter.RateLimit(1, 3*time.Second)) // Use 3 second window
+	router.Use(limiter.RateLimit(1, 5*time.Second)) // Use 5 second window for more reliable timing
 	router.GET("/test", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "ok"})
 	})
@@ -270,8 +270,8 @@ func TestRedisRateLimiter_WindowExpiration(t *testing.T) {
 	router.ServeHTTP(w2, req2)
 	assert.Equal(t, 429, w2.Code)
 
-	// Wait for window to expire (3 seconds + buffer)
-	time.Sleep(3100 * time.Millisecond)
+	// Wait for window to expire (5 seconds + buffer)
+	time.Sleep(5100 * time.Millisecond)
 
 	// Small additional delay to ensure timing is reliable
 	time.Sleep(100 * time.Millisecond)
