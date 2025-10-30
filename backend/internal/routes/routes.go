@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs
 	"github.com/steve-phan/page-insight-tool/internal/handlers"
 	"github.com/steve-phan/page-insight-tool/internal/middleware"
 
