@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs (side-effect import)
+
 	"github.com/steve-phan/page-insight-tool/internal/config"
 	"github.com/steve-phan/page-insight-tool/internal/server"
 )
