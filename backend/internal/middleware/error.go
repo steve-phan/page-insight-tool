@@ -3,6 +3,8 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/steve-phan/page-insight-tool/internal/errors"
@@ -10,6 +12,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// isTesting returns true if running in test mode
+func isTesting() bool {
+	// Check if we're running a test binary (common pattern in Go)
+	return strings.HasSuffix(os.Args[0], ".test") || strings.Contains(os.Args[0], "test")
+}
 
 // ErrorHandler provides centralized error handling middleware for Gin
 type ErrorHandler struct {
@@ -98,6 +106,11 @@ func (eh *ErrorHandler) enrichErrorContext(c *gin.Context, httpError *models.HTT
 
 // logError logs the error with appropriate context
 func (eh *ErrorHandler) logError(c *gin.Context, originalErr error, httpError *models.HTTPError) {
+	// Skip logging during tests to avoid test output pollution
+	if isTesting() {
+		return
+	}
+
 	// In production, this should use structured logging (e.g., logrus, zap)
 	logLevel := eh.determineLogLevel(httpError.Code)
 
