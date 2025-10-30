@@ -33,6 +33,16 @@ analysis:
   verify_ssl: false
   max_body_size: 10 # MB
 
+# Redis Configuration
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+  min_idle_conns: 2
+  conn_max_lifetime: 5m
+
 # Rate Limiting Configuration
 rate_limit:
   enabled: true
