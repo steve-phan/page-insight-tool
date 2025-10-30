@@ -1,94 +1,74 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 )
 
-// RateLimiter implements IP-based rate limiting using a simple counter approach
-type RateLimiter struct {
-	visitors map[string]*visitor
-	mu       sync.RWMutex
-	rate     int           // requests per window
-	window   time.Duration // time window
-	cleanup  *time.Ticker
+// RedisRateLimiter provides rate limiting for multiple endpoints with different limits
+type RedisRateLimiter struct {
+	redis     *redis.Client
+	keyPrefix string
 }
 
-type visitor struct {
-	lastSeen time.Time
-	count    int
-	mu       sync.Mutex
-}
-
-// NewRateLimiter creates a new rate limiter
-func NewRateLimiter(rate int, window time.Duration) *RateLimiter {
-	rl := &RateLimiter{
-		visitors: make(map[string]*visitor),
-		rate:     rate,
-		window:   window,
-		// Cleanup interval: use window duration, but at least 1 minute, at most 5 minutes
-		cleanup: time.NewTicker(calculateCleanupInterval(window)),
+// NewRedisRateLimiter creates a centralized rate limiter service
+func NewRedisRateLimiter(redisClient *redis.Client) *RedisRateLimiter {
+	return &RedisRateLimiter{
+		redis:     redisClient,
+		keyPrefix: "ratelimit",
 	}
-
-	// Start cleanup goroutine to prevent memory leaks
-	go rl.cleanupVisitors()
-
-	return rl
 }
 
-// calculateCleanupInterval determines the cleanup interval based on window size
-// It should be reasonable relative to the window to avoid frequent unnecessary checks
-func calculateCleanupInterval(window time.Duration) time.Duration {
-	// Use window * 2 as cleanup interval, but bound it between 1 minute and 5 minutes
-	cleanupInterval := window * 2
-
-	if cleanupInterval < 1*time.Minute {
-		return 1 * time.Minute
-	}
-	if cleanupInterval > 5*time.Minute {
-		return 5 * time.Minute
-	}
-
-	return cleanupInterval
-}
-
-// Middleware returns a Gin middleware function for rate limiting
-func (rl *RateLimiter) Middleware() gin.HandlerFunc {
+// RateLimit creates middleware for a specific rate limit configuration
+func (rls *RedisRateLimiter) RateLimit(rate int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
+		endpoint := c.Request.URL.Path
+		key := fmt.Sprintf("%s:%s:%s", rls.keyPrefix, ip, endpoint)
 
-		rl.mu.Lock()
-		v, exists := rl.visitors[ip]
-		if !exists {
-			v = &visitor{
-				lastSeen: time.Now(),
-				count:    0,
-			}
-			rl.visitors[ip] = v
+		ctx := context.Background()
+		now := time.Now()
+
+		requestId := fmt.Sprintf("%d:%s", now.UnixNano(), uuid.New().String()[:8])
+
+		// Create a Redis pipeline to execute multiple commands atomically
+		pipe := rls.redis.Pipeline()
+
+		// Add the new request to the sorted set
+		pipe.ZAdd(ctx, key, &redis.Z{
+			Score:  float64(now.Unix()),
+			Member: requestId,
+		})
+
+		// Remove entries outside the time window
+		pipe.ZRemRangeByScore(ctx, key, "-inf", fmt.Sprintf("(%f", float64(now.Add(-window).Unix())))
+
+		// Count the remaining requests in the window
+		pipe.ZCard(ctx, key)
+
+		// Set TTL for automatic cleanup
+		pipe.Expire(ctx, key, window*2)
+
+		cmds, err := pipe.Exec(ctx)
+		if err != nil {
+			fmt.Printf("Redis rate limiter error: %v\n", err)
+			c.Header("X-RateLimit-Fallback", "true")
+			c.Next()
+			return
 		}
-		rl.mu.Unlock()
 
-		v.mu.Lock()
-		defer v.mu.Unlock()
+		count := cmds[2].(*redis.IntCmd).Val()
 
-		// Reset counter if window expired
-		if time.Since(v.lastSeen) > rl.window {
-			v.count = 0
-			v.lastSeen = time.Now()
-		}
-
-		// Check if limit exceeded
-		if v.count >= rl.rate {
-			v.lastSeen = time.Now()
-
-			c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", rl.rate))
+		if count > int64(rate) {
+			c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", rate))
 			c.Header("X-RateLimit-Remaining", "0")
-			c.Header("Retry-After", fmt.Sprintf("%d", int(rl.window.Seconds())))
-			c.JSON(http.StatusTooManyRequests, gin.H{
+			c.Header("Retry-After", fmt.Sprintf("%d", int(window.Seconds())))
+			c.JSON(429, gin.H{
 				"error":   "Rate limit exceeded",
 				"message": "Too many requests. Please try again later.",
 			})
@@ -96,29 +76,11 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		// Increment counter
-		v.count++
-		v.lastSeen = time.Now()
-
 		// Set rate limit headers
-		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", rl.rate))
-		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", rl.rate-v.count))
+		remaining := rate - int(count)
+		c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", rate))
+		c.Header("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
 
 		c.Next()
-	}
-}
-
-// cleanupVisitors removes old visitors to prevent memory leaks
-func (rl *RateLimiter) cleanupVisitors() {
-	for range rl.cleanup.C {
-		rl.mu.Lock()
-		for ip, v := range rl.visitors {
-			v.mu.Lock()
-			if time.Since(v.lastSeen) > rl.window*2 {
-				delete(rl.visitors, ip)
-			}
-			v.mu.Unlock()
-		}
-		rl.mu.Unlock()
 	}
 }

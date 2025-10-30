@@ -7,10 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "generate:types": "swagger-typescript-api generate -p ../backend/docs/api/swagger.json -o ./src/types -n api.generated.ts --modular",
     "generate:types:remote": "swagger-typescript-api generate -p http://localhost:8080/swagger/doc.json -o ./src/types -n api.generated.ts --modular",
     "generate:api": "swagger-typescript-api generate -p ../backend/docs/api/swagger.json -o ./src/lib/api/generated -n api.ts --modular --axios",
-    "generate:all": "npm run generate:types"
+    "generate:all": "yarn generate:types"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

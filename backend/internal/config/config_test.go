@@ -98,6 +98,20 @@ func TestConfigValidation(t *testing.T) {
 				Analysis: AnalysisConfig{
 					Timeout: 30,
 				},
+				Redis: RedisConfig{
+					Host:            "localhost",
+					Port:            6379,
+					Password:        "",
+					DB:              0,
+					PoolSize:        10,
+					MinIdleConns:    2,
+					ConnMaxLifetime: time.Minute * 5,
+				},
+				RateLimit: RateLimitConfig{
+					Enabled:  true,
+					Requests: 10,
+					Window:   time.Minute,
+				},
 			},
 			expectError: false,
 		},
@@ -167,6 +181,15 @@ func TestAnalysisTimeoutValidation(t *testing.T) {
 				},
 				Analysis: AnalysisConfig{
 					Timeout: tt.timeout,
+				},
+				Redis: RedisConfig{
+					Host:            "localhost",
+					Port:            6379,
+					Password:        "",
+					DB:              0,
+					PoolSize:        10,
+					MinIdleConns:    2,
+					ConnMaxLifetime: time.Minute * 5,
 				},
 			}
 			err := validateConfig(config)

@@ -13,6 +13,7 @@ type Config struct {
 	App       AppConfig       `mapstructure:"app"`
 	Logging   LoggingConfig   `mapstructure:"logging"`
 	Analysis  AnalysisConfig  `mapstructure:"analysis"`
+	Redis     RedisConfig     `mapstructure:"redis"`
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
 }
 
@@ -51,6 +52,17 @@ type AnalysisConfig struct {
 	Timeout     time.Duration `mapstructure:"timeout"`
 	VerifySSL   bool          `mapstructure:"verify_ssl"`
 	MaxBodySize int64         `mapstructure:"max_body_size"`
+}
+
+// RedisConfig holds Redis-related configuration
+type RedisConfig struct {
+	Host            string        `mapstructure:"host"`
+	Port            int           `mapstructure:"port"`
+	Password        string        `mapstructure:"password"`
+	DB              int           `mapstructure:"db"`
+	PoolSize        int           `mapstructure:"pool_size"`
+	MinIdleConns    int           `mapstructure:"min_idle_conns"`
+	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 }
 
 // RateLimitConfig holds rate limiting configuration
@@ -123,6 +135,15 @@ func setDefaults() {
 	viper.SetDefault("analysis.verify_ssl", false)
 	viper.SetDefault("analysis.max_body_size", int64(10))
 
+	// Redis defaults
+	viper.SetDefault("redis.host", "localhost")
+	viper.SetDefault("redis.port", 6379)
+	viper.SetDefault("redis.password", "")
+	viper.SetDefault("redis.db", 0)
+	viper.SetDefault("redis.pool_size", 10)
+	viper.SetDefault("redis.min_idle_conns", 2)
+	viper.SetDefault("redis.conn_max_lifetime", "5m")
+
 	// Rate limit defaults
 	viper.SetDefault("rate_limit.enabled", true)
 	viper.SetDefault("rate_limit.requests", 60)
@@ -138,6 +159,19 @@ func validateConfig(config *Config) error {
 	// Validate analysis config
 	if config.Analysis.Timeout <= 0 || config.Analysis.Timeout >= 1000 {
 		return fmt.Errorf("invalid analysis timeout: %v", config.Analysis.Timeout)
+	}
+	// Validate Redis config
+	if config.Redis.Port <= 0 || config.Redis.Port > 65535 {
+		return fmt.Errorf("invalid Redis port: %d", config.Redis.Port)
+	}
+	if config.Redis.DB < 0 {
+		return fmt.Errorf("invalid Redis DB: %d", config.Redis.DB)
+	}
+	if config.Redis.PoolSize <= 0 {
+		return fmt.Errorf("invalid Redis pool size: %d", config.Redis.PoolSize)
+	}
+	if config.Redis.MinIdleConns < 0 {
+		return fmt.Errorf("invalid Redis min idle connections: %d", config.Redis.MinIdleConns)
 	}
 	// Validate rate limit config
 	if config.RateLimit.Enabled {

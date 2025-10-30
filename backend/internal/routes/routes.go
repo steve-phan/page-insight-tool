@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs
 	"github.com/steve-phan/page-insight-tool/internal/handlers"
 	"github.com/steve-phan/page-insight-tool/internal/middleware"
-	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -42,17 +42,18 @@ func SetupRoutes(handlerFactory *handlers.HandlerFactory) *gin.Engine {
 // setupAPIRoutes configures API v1 routes with handler factory
 func setupAPIRoutes(router *gin.Engine, handlerFactory *handlers.HandlerFactory) {
 	api := router.Group("/api/v1")
+
+	rateLimiter := middleware.NewRedisRateLimiter(handlerFactory.RedisService().GetClient())
+
 	{
 		// Health endpoint: More lenient rate limit (100 requests per minute)
 		healthGroup := api.Group("/health")
-		healthRateLimiter := middleware.NewRateLimiter(100, 1*time.Minute)
-		healthGroup.Use(healthRateLimiter.Middleware())
+		healthGroup.Use(rateLimiter.RateLimit(100, time.Minute))
 		healthGroup.GET("", handlerFactory.HealthHandler())
 
-		// Analyze endpoint: Stricter rate limit (10 requests per 10 seconds)
+		// Analyze endpoint: Stricter rate limit (5 requests per 10 seconds)
 		analyzeGroup := api.Group("/analyze")
-		analyzeRateLimiter := middleware.NewRateLimiter(10, 10*time.Second)
-		analyzeGroup.Use(analyzeRateLimiter.Middleware())
+		analyzeGroup.Use(rateLimiter.RateLimit(5, 10*time.Second))
 		analyzeGroup.GET("", handlerFactory.AnalyzeHandler())
 	}
 }

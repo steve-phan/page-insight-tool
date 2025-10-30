@@ -6,6 +6,8 @@ import (
 	"github.com/steve-phan/page-insight-tool/internal/config"
 	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
 	"github.com/steve-phan/page-insight-tool/internal/services/analyzer/extractors"
+	"github.com/steve-phan/page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/services/redis"
 )
 
 // ServiceFactory handles creation and validation of all application services
@@ -23,6 +25,12 @@ func NewServiceFactory(config *config.Config) *ServiceFactory {
 // CreateServices creates and validates all application services
 // This is where we implement fail-fast validation
 func (sf *ServiceFactory) CreateServices() (*Services, error) {
+	// Create Redis service
+	redisService, err := redis.NewRedisService(sf.config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Redis service: %w", err)
+	}
+
 	// Create analyzer service with configured extractors
 	analyzerService, err := analyzer.NewAnalyzerService(sf.config,
 		analyzer.WithExtractors(
@@ -37,8 +45,13 @@ func (sf *ServiceFactory) CreateServices() (*Services, error) {
 		return nil, fmt.Errorf("failed to create analyzer service: %w", err)
 	}
 
+	// Create health service
+	healthService := health.NewHealthService(sf.config)
+
 	return &Services{
 		Config:   sf.config,
 		Analyzer: analyzerService,
+		Health:   healthService,
+		Redis:    redisService,
 	}, nil
 }

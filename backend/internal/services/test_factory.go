@@ -5,6 +5,7 @@ import (
 	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
 	"github.com/steve-phan/page-insight-tool/internal/services/analyzer/extractors"
 	"github.com/steve-phan/page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/services/redis"
 )
 
 // TestServiceFactory creates services suitable for testing infrastructure components
@@ -23,6 +24,9 @@ func NewTestServiceFactory(config *config.Config) *TestServiceFactory {
 // CreateServices creates minimal services for testing infrastructure
 // Uses a single basic extractor to avoid fail-fast validation while keeping tests focused
 func (tsf *TestServiceFactory) CreateServices() (*Services, error) {
+	// Create test Redis service (no actual connection for tests)
+	redisService := redis.NewTestRedisService(tsf.config)
+
 	// For infrastructure tests, we just need a working analyzer with minimal extractors
 	// Use only TitleExtractor as it's the simplest and most reliable
 	analyzerService, err := analyzer.NewAnalyzerService(tsf.config,
@@ -41,5 +45,6 @@ func (tsf *TestServiceFactory) CreateServices() (*Services, error) {
 		Config:   tsf.config,
 		Analyzer: analyzerService,
 		Health:   healthService,
+		Redis:    redisService,
 	}, nil
 }

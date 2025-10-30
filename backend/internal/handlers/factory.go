@@ -6,6 +6,7 @@ import (
 	"github.com/steve-phan/page-insight-tool/internal/services"
 	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
 	"github.com/steve-phan/page-insight-tool/internal/services/health"
+	"github.com/steve-phan/page-insight-tool/internal/services/redis"
 	"github.com/steve-phan/page-insight-tool/internal/validation"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,7 @@ type HandlerFactory struct {
 	health       *health.HealthService
 	errorHandler *middleware.ErrorHandler
 	urlValidator *validation.URLValidator
+	redis        *redis.RedisService
 }
 
 // NewHandlerFactory creates a new handler factory with dependencies
@@ -29,6 +31,7 @@ func NewHandlerFactory(services *services.Services) *HandlerFactory {
 		health:       services.Health,
 		errorHandler: middleware.NewErrorHandler(),
 		urlValidator: validation.NewURLValidator(),
+		redis:        services.Redis,
 	}
 }
 
@@ -45,4 +48,9 @@ func (hf *HandlerFactory) HealthHandler() gin.HandlerFunc {
 // AnalyzeHandler returns the analyze handler with error handling and validation
 func (hf *HandlerFactory) AnalyzeHandler() gin.HandlerFunc {
 	return AnalyzeHandler(hf.analyzer, hf.errorHandler, hf.urlValidator)
+}
+
+// RedisService returns the Redis service
+func (hf *HandlerFactory) RedisService() *redis.RedisService {
+	return hf.redis
 }
