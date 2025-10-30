@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 
-	_ "github.com/steve-phan/page-insight-tool/docs/api" // Swagger docs (side-effect import)
+	"github.com/steve-phan/page-insight-tool/docs/api"
+	"github.com/swaggo/swag"
 
 	"github.com/steve-phan/page-insight-tool/internal/config"
 	"github.com/steve-phan/page-insight-tool/internal/server"
@@ -49,6 +50,8 @@ func main() {
 	if err := srv.Start(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+
+	swag.Register(api.SwaggerInfo.InstanceName(), api.SwaggerInfo)
 
 	// Wait for shutdown signal
 	srv.WaitForShutdown()

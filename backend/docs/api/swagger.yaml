@@ -1,0 +1,169 @@
+basePath: /api/v1
+definitions:
+  health.HealthResponse:
+    properties:
+      build_date:
+        example: "2025-10-29T22:00:00Z"
+        type: string
+      environment:
+        example: development
+        type: string
+      status:
+        example: healthy
+        type: string
+      timestamp:
+        example: "2025-10-29T22:00:00Z"
+        type: string
+      version:
+        example: 1.0.0
+        type: string
+    type: object
+  models.AnalysisResponse:
+    properties:
+      analysis_time_ms:
+        example: 150
+        type: integer
+      has_login_form:
+        example: true
+        type: boolean
+      headings:
+        $ref: '#/definitions/models.Headings'
+      html_version:
+        example: HTML5
+        type: string
+      links:
+        $ref: '#/definitions/models.Links'
+      page_title:
+        example: Google
+        type: string
+    type: object
+  models.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      details:
+        additionalProperties: true
+        type: object
+      message:
+        example: Invalid URL
+        type: string
+      request_id:
+        type: string
+      timestamp:
+        type: string
+      type:
+        example: INVALID_URL
+        type: string
+    type: object
+  models.Headings:
+    properties:
+      h1:
+        example: 10
+        type: integer
+      h2:
+        example: 20
+        type: integer
+      h3:
+        example: 30
+        type: integer
+      h4:
+        example: 40
+        type: integer
+      h5:
+        example: 50
+        type: integer
+      h6:
+        example: 60
+        type: integer
+    type: object
+  models.Links:
+    properties:
+      external:
+        example: 20
+        type: integer
+      inaccessible:
+        example: 30
+        type: integer
+      internal:
+        example: 10
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@pageinsighttool.com
+    name: API Support
+  description: |-
+    A production-grade web page analysis tool that analyzes HTML pages and extracts insights including headings, links, login forms, and more.
+    Supports both static HTML analysis and Client-Side Rendered (CSR) website detection.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Page Insight Tool API
+  version: "1.0"
+paths:
+  /analyze:
+    get:
+      consumes:
+      - application/json
+      description: Analyzes a web page and extracts HTML version, title, headings,
+        links, login forms, and CSR detection information
+      parameters:
+      - description: URL of the web page to analyze
+        example: https://example.com
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AnalysisResponse'
+        "400":
+          description: Invalid URL
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "422":
+          description: HTML parsing error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "429":
+          description: Rate limit exceeded
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Analyze a web page
+      tags:
+      - Analysis
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health status of the API including version, environment,
+        and server status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - Health
+schemes:
+- http
+- https
+swagger: "2.0"
+tags:
+- description: Web page analysis endpoints
+  name: Analysis
+- description: Health check and monitoring endpoints
+  name: Health
