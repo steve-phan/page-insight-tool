@@ -41,12 +41,12 @@ func (rls *RedisRateLimiter) RateLimit(rate int, window time.Duration) gin.Handl
 
 		// Add the new request to the sorted set
 		pipe.ZAdd(ctx, key, &redis.Z{
-			Score:  float64(now.Unix()),
+			Score:  float64(now.UnixMilli()),
 			Member: requestId,
 		})
 
 		// Remove entries outside the time window
-		pipe.ZRemRangeByScore(ctx, key, "-inf", fmt.Sprintf("(%f", float64(now.Add(-window).Unix())))
+		pipe.ZRemRangeByScore(ctx, key, "-inf", fmt.Sprintf("%f", float64(now.Add(-window).UnixMilli())))
 
 		// Count the remaining requests in the window
 		pipe.ZCard(ctx, key)
