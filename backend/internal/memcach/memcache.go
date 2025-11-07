@@ -6,14 +6,22 @@ import (
 	"time"
 )
 
-// Implement a basic MemCache
-
 const memcacheDefaultExpiration = 5 * 60 // 5 minutes in seconds
 
+// item represents a cached item with value and expireration time
 type item struct {
 	value      []byte
 	expiration int64
 }
+
+// InMemoryCache defines the interface for an in-memory cache operations
+type InMemoryCache interface {
+	Set(key string, value []byte)
+	Get(key string) ([]byte, bool)
+	Stop()
+}
+
+// MemCache is an in-memory cache implementation with expiration
 type MemCache struct {
 	data map[string]item
 	mu   sync.RWMutex
@@ -21,35 +29,12 @@ type MemCache struct {
 	stop chan struct{}
 }
 
-func (m *MemCache) cleanup() {
+var (
+	globalCache InMemoryCache
+	once        sync.Once
+)
 
-	// Create a ticker that ticks every 30 seconds
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			m.mu.Lock()
-			for k, v := range m.data {
-				if time.Now().UnixNano() > v.expiration {
-					delete(m.data, k)
-				}
-
-			}
-			m.mu.Unlock()
-		case <-m.stop: // Listen to the stop signal channel
-			fmt.Println("Greatful stop interval clean up")
-			return
-		}
-	}
-}
-
-func (m *MemCache) Stop() {
-	close(m.stop)
-}
-
-// NewMemCache creates a new in-memory cache
+// NewMemCache creates a new in-memory cache instance
 func NewMemCache() *MemCache {
 
 	mc := &MemCache{
@@ -58,6 +43,15 @@ func NewMemCache() *MemCache {
 	}
 	go mc.cleanup()
 	return mc
+}
+
+// GetMemCache returns the global Memcache instance
+func GetMemCache() InMemoryCache {
+	once.Do(func() {
+		globalCache = NewMemCache()
+	})
+
+	return globalCache
 }
 
 func (mc *MemCache) Set(key string, value []byte) {
@@ -78,21 +72,32 @@ func (mc *MemCache) Get(key string) ([]byte, bool) {
 	return itm.value, true
 }
 
-// Get Memcache interface
-type Memcache interface {
-	Set(key string, value []byte)
-	Get(key string) ([]byte, bool)
-	Stop()
+// Stop gracefully stop the MemCache cleanup goroutine
+func (m *MemCache) Stop() {
+	close(m.stop)
 }
 
-var globalCache *MemCache
-var once sync.Once
+// cleanup periodically removes expired items from the cache
+func (m *MemCache) cleanup() {
 
-// GetMemcache returns the global Memcache instance
-func GetMemcache() Memcache {
-	once.Do(func() {
-		globalCache = NewMemCache()
-	})
+	// Create a ticker that ticks every 30 seconds
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
 
-	return globalCache
+	for {
+		select {
+		case <-ticker.C:
+			m.mu.Lock()
+			for k, v := range m.data {
+				if time.Now().UnixNano() > v.expiration {
+					delete(m.data, k)
+				}
+
+			}
+			m.mu.Unlock()
+		case <-m.stop: // Listen to the stop signal channel
+			fmt.Println("Gracefully stopping interval cleanup")
+			return
+		}
+	}
 }
