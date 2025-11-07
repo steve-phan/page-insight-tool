@@ -65,6 +65,8 @@ func (mc *MemCache) Set(key string, value []byte) {
 
 // Get retrieves an item from the cache
 func (mc *MemCache) Get(key string) ([]byte, bool) {
+	mc.mu.RLock()
+	defer mc.mu.RUnlock()
 	itm, found := mc.data[key]
 	if !found || time.Now().UnixNano() > itm.expiration {
 		return nil, false
