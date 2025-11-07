@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/steve-phan/page-insight-tool/internal/memcach"
 	"github.com/steve-phan/page-insight-tool/internal/middleware"
+	"github.com/steve-phan/page-insight-tool/internal/models"
 	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
 	"github.com/steve-phan/page-insight-tool/internal/validation"
 
@@ -33,7 +36,16 @@ func AnalyzeHandler(analyzerService *analyzer.AnalyzerService, errorHandler *mid
 
 		cachedData, found := memcach.GetMemcache().Get(rawURL)
 		if found {
-			c.JSON(http.StatusOK, cachedData)
+			// Logs
+			fmt.Println("=============Cache hit for URL:", rawURL)
+
+			// UnMarshal cached data
+			var response models.AnalysisResponse
+			if err := json.Unmarshal(cachedData, &response); err != nil {
+				// If unmarshaling fails, treat as cache miss
+				fmt.Println("Cache unmarshal error for URL:", rawURL, "error:", err)
+			}
+			c.JSON(http.StatusOK, response)
 			return
 		}
 		// Validate URL using dedicated validator
@@ -47,6 +59,11 @@ func AnalyzeHandler(analyzerService *analyzer.AnalyzerService, errorHandler *mid
 		if err != nil {
 			errorHandler.HandleError(c, err)
 			return
+		}
+
+		// Store result in memcache
+		if data, err := json.Marshal(response); err == nil {
+			memcach.GetMemcache().Set(rawURL, data)
 		}
 
 		// Success response

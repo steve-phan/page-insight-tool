@@ -1,7 +1,6 @@
 package memcach
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -55,8 +54,6 @@ func (mc *MemCache) Set(key string, value []byte) {
 
 // Get retrieves an item from the cache
 func (mc *MemCache) Get(key string) ([]byte, bool) {
-	// Logs
-	fmt.Printf("memcache hit with the url: %v\n", key)
 	itm, found := mc.data[key]
 	if !found || time.Now().UnixNano() > itm.expiration {
 		return nil, false
