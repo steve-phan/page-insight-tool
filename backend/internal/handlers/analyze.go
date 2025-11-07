@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/steve-phan/page-insight-tool/internal/memcach"
 	"github.com/steve-phan/page-insight-tool/internal/middleware"
 	analyzer "github.com/steve-phan/page-insight-tool/internal/services/analyzer"
 	"github.com/steve-phan/page-insight-tool/internal/validation"
@@ -28,6 +29,13 @@ func AnalyzeHandler(analyzerService *analyzer.AnalyzerService, errorHandler *mid
 		// Extract and validate URL parameter
 		rawURL := c.Query("url")
 
+		// Check memcache for existing analysis result
+
+		cachedData, found := memcach.GetMemcache().Get(rawURL)
+		if found {
+			c.JSON(http.StatusOK, cachedData)
+			return
+		}
 		// Validate URL using dedicated validator
 		if err := urlValidator.ValidateURL(rawURL); err != nil {
 			errorHandler.HandleError(c, err)
