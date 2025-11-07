@@ -10,19 +10,40 @@ import (
 
 const memcacheDefaultExpiration = 5 * 60 // 5 minutes in seconds
 
-type MemCache struct {
-	data map[string]item
-}
-
 type item struct {
 	value      []byte
 	expiration int64
 }
+type MemCache struct {
+	data map[string]item
+	mu   sync.RWMutex
+}
+
+func (m *MemCache) cleanup() {
+
+	for {
+		time.Sleep(30 * time.Second)
+		m.mu.Lock()
+
+		for k, v := range m.data {
+			if time.Now().UnixNano() > v.expiration {
+				delete(m.data, k)
+			}
+		}
+		m.mu.Unlock()
+
+	}
+
+}
 
 // NewMemCache creates a new in-memory cache
 func NewMemCache() *MemCache {
-	return &MemCache{
-		data: make(map[string]item)}
+
+	mc := &MemCache{
+		data: make(map[string]item),
+	}
+	go mc.cleanup()
+	return mc
 }
 
 func (mc *MemCache) Set(key string, value []byte) {
