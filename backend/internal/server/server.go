@@ -11,6 +11,7 @@ import (
 
 	"github.com/steve-phan/page-insight-tool/internal/config"
 	"github.com/steve-phan/page-insight-tool/internal/handlers"
+	"github.com/steve-phan/page-insight-tool/internal/memcach"
 	"github.com/steve-phan/page-insight-tool/internal/routes"
 	"github.com/steve-phan/page-insight-tool/internal/services"
 
@@ -103,6 +104,7 @@ func (s *Server) WaitForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+	memcach.NewMemCache().Stop()
 
 	if err := s.Stop(); err != nil {
 		log.Fatalf("Failed to stop server: %v", err)

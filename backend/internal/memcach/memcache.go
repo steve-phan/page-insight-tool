@@ -1,6 +1,7 @@
 package memcach
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -16,23 +17,36 @@ type item struct {
 type MemCache struct {
 	data map[string]item
 	mu   sync.RWMutex
+
+	stop chan struct{}
 }
 
 func (m *MemCache) cleanup() {
 
+	// Create a ticker that ticks every 30 seconds
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
 	for {
-		time.Sleep(30 * time.Second)
-		m.mu.Lock()
+		select {
+		case <-ticker.C:
+			m.mu.Lock()
+			for k, v := range m.data {
+				if time.Now().UnixNano() > v.expiration {
+					delete(m.data, k)
+				}
 
-		for k, v := range m.data {
-			if time.Now().UnixNano() > v.expiration {
-				delete(m.data, k)
 			}
+			m.mu.Unlock()
+		case <-m.stop: // Listen to the stop signal channel
+			fmt.Println("Greatful stop interval clean up")
+			return
 		}
-		m.mu.Unlock()
-
 	}
+}
 
+func (m *MemCache) Stop() {
+	close(m.stop)
 }
 
 // NewMemCache creates a new in-memory cache
@@ -40,12 +54,15 @@ func NewMemCache() *MemCache {
 
 	mc := &MemCache{
 		data: make(map[string]item),
+		stop: make(chan struct{}),
 	}
 	go mc.cleanup()
 	return mc
 }
 
 func (mc *MemCache) Set(key string, value []byte) {
+	mc.mu.Lock()
+	defer mc.mu.Unlock()
 	mc.data[key] = item{
 		value:      value,
 		expiration: int64(time.Now().Add(memcacheDefaultExpiration * time.Second).UnixNano()),
