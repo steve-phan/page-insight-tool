@@ -82,6 +82,7 @@ func (mc *MemCache) Get(key string) ([]byte, bool) {
 type Memcache interface {
 	Set(key string, value []byte)
 	Get(key string) ([]byte, bool)
+	Stop()
 }
 
 var globalCache *MemCache

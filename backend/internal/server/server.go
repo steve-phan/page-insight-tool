@@ -104,7 +104,7 @@ func (s *Server) WaitForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	memcach.NewMemCache().Stop()
+	memcach.GetMemcache().Stop()
 
 	if err := s.Stop(); err != nil {
 		log.Fatalf("Failed to stop server: %v", err)
