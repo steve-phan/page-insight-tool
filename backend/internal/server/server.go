@@ -38,6 +38,9 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
+	// Initialize global in-memory cache if enabled
+	memcach.InitCache(cfg.Cache) // Initialize global cache
+
 	// Set Gin mode based on environment
 	if appServices.Config.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
@@ -103,8 +106,8 @@ func (s *Server) Stop() error {
 func (s *Server) WaitForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	memcach.GetMemCache().Stop() // Stop cache cleanup goroutine
 	<-quit
-	memcach.GetMemCache().Stop()
 
 	if err := s.Stop(); err != nil {
 		log.Fatalf("Failed to stop server: %v", err)

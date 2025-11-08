@@ -37,6 +37,9 @@ func AnalyzeHandler(analyzerService *analyzer.AnalyzerService, errorHandler *mid
 		cachedData, found := memcach.GetMemCache().Get(rawURL)
 		if found {
 
+			// Log cache hit
+			fmt.Println("Cache hit for URL:", rawURL)
+
 			// UnMarshal cached data
 			var response models.AnalysisResponse
 			if err := json.Unmarshal(cachedData, &response); err != nil {

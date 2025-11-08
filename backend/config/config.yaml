@@ -48,3 +48,10 @@ rate_limit:
   enabled: true
   requests: 10 # requests per window
   window: 10s # time window (e.g., 1m, 5m, 1h)
+
+# Caching Configuration
+cache:
+  enabled: false
+  default_ttl: 300s # Default time-to-live (5 minutes)
+  max_size: 1000 # Max number of items (optional, for future LRU)
+  cleanup_interval: 30s # How often to clean expired items

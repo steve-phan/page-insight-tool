@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/steve-phan/page-insight-tool/internal/config"
 )
 
 const memcacheDefaultExpiration = 5 * 60 // 5 minutes in seconds
@@ -23,8 +25,9 @@ type InMemoryCache interface {
 
 // MemCache is an in-memory cache implementation with expiration
 type MemCache struct {
-	data map[string]item
-	mu   sync.RWMutex
+	config config.CacheConfig
+	data   map[string]item
+	mu     sync.RWMutex
 
 	stop chan struct{}
 }
@@ -35,26 +38,33 @@ var (
 )
 
 // NewMemCache creates a new in-memory cache instance
-func NewMemCache() *MemCache {
+func NewMemCache(cacheConfig config.CacheConfig) *MemCache {
 
 	mc := &MemCache{
-		data: make(map[string]item),
-		stop: make(chan struct{}),
+		data:   make(map[string]item),
+		stop:   make(chan struct{}),
+		config: cacheConfig,
 	}
-	go mc.cleanup()
+	go mc.cleanup(cacheConfig.CleanupInterval)
 	return mc
+}
+
+func InitCache(cacheConfig config.CacheConfig) {
+	once.Do(func() {
+		globalCache = NewMemCache(cacheConfig)
+	})
 }
 
 // GetMemCache returns the global Memcache instance
 func GetMemCache() InMemoryCache {
-	once.Do(func() {
-		globalCache = NewMemCache()
-	})
 
 	return globalCache
 }
 
 func (mc *MemCache) Set(key string, value []byte) {
+	if !mc.config.Enabled {
+		return
+	}
 	mc.mu.Lock()
 	defer mc.mu.Unlock()
 	mc.data[key] = item{
@@ -65,6 +75,10 @@ func (mc *MemCache) Set(key string, value []byte) {
 
 // Get retrieves an item from the cache
 func (mc *MemCache) Get(key string) ([]byte, bool) {
+	if !mc.config.Enabled {
+		return nil, false
+	}
+
 	mc.mu.RLock()
 	defer mc.mu.RUnlock()
 	itm, found := mc.data[key]
@@ -80,10 +94,10 @@ func (m *MemCache) Stop() {
 }
 
 // cleanup periodically removes expired items from the cache
-func (m *MemCache) cleanup() {
+func (m *MemCache) cleanup(interval time.Duration) {
 
 	// Create a ticker that ticks every 30 seconds
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {

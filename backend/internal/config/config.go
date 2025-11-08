@@ -15,6 +15,7 @@ type Config struct {
 	Analysis  AnalysisConfig  `mapstructure:"analysis"`
 	Redis     RedisConfig     `mapstructure:"redis"`
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
+	Cache     CacheConfig     `mapstructure:"cache"`
 }
 
 // ServerConfig holds server-related configuration
@@ -70,6 +71,14 @@ type RateLimitConfig struct {
 	Enabled  bool          `mapstructure:"enabled"`
 	Requests int           `mapstructure:"requests"`
 	Window   time.Duration `mapstructure:"window"`
+}
+
+// CacheConfig holds caching-related configuration
+type CacheConfig struct {
+	Enabled         bool          `mapstructure:"enabled"`
+	DefaultTTL      time.Duration `mapstructure:"default_ttl"`
+	MaxSize         int           `mapstructure:"max_size"`
+	CleanupInterval time.Duration `mapstructure:"cleanup_interval"`
 }
 
 // LoadConfig loads configuration from file and environment variables
@@ -148,6 +157,12 @@ func setDefaults() {
 	viper.SetDefault("rate_limit.enabled", true)
 	viper.SetDefault("rate_limit.requests", 60)
 	viper.SetDefault("rate_limit.window", "1m")
+
+	// Cache defaults
+	viper.SetDefault("cache.enabled", true)
+	viper.SetDefault("cache.default_ttl", "300s")
+	viper.SetDefault("cache.max_size", 1000)
+	viper.SetDefault("cache.cleanup_interval", "30s")
 }
 
 // validateConfig validates the configuration
