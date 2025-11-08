@@ -1,8 +1,12 @@
 package extractors
 
 import (
+	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/steve-phan/page-insight-tool/internal/models"
 
@@ -19,20 +23,25 @@ func (e *LinksExtractor) Name() string {
 
 // Extract analyzes all anchor tags and categorizes them as internal, external, or inaccessible
 func (e *LinksExtractor) Extract(doc *html.Node, base *url.URL, result *models.AnalysisResponse, rawHTML string) {
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
 	var walk func(*html.Node)
 	walk = func(n *html.Node) {
 		if n.Type == html.ElementNode && n.Data == "a" {
-			processLinkElement(n, base, &result.Links)
+			processLinkElement(n, base, &result.Links, &wg, &mu)
 		}
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			walk(c)
 		}
 	}
 	walk(doc)
+	wg.Wait()
 }
 
 // processLinkElement classifies a single <a> element
-func processLinkElement(n *html.Node, base *url.URL, a *models.Links) {
+func processLinkElement(n *html.Node, base *url.URL, a *models.Links, wg *sync.WaitGroup, mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
 	href, ok := getAttr(n, "href")
 	if !ok || href == "" {
 		a.Inaccessible++
@@ -59,15 +68,28 @@ func processLinkElement(n *html.Node, base *url.URL, a *models.Links) {
 		return
 	}
 
-	if parsed.Host == "" { // relative, same host
+	if parsed.Host == "" || strings.EqualFold(parsed.Hostname(), base.Hostname()) {
 		a.Internal++
 		return
 	}
-	if strings.EqualFold(parsed.Hostname(), base.Hostname()) {
-		a.Internal++
-	} else {
-		a.External++
-	}
+
+	// External link: check accessibility concurrently
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		if !isReachable(parsed.String()) {
+			mu.Lock()
+			fmt.Println("Inaccessible link found:", parsed.String())
+			a.Inaccessible++
+			mu.Unlock()
+		} else {
+			mu.Lock()
+			a.External++
+			mu.Unlock()
+		}
+	}()
 }
 
 func getAttr(n *html.Node, key string) (string, bool) {
@@ -77,4 +99,17 @@ func getAttr(n *html.Node, key string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func isReachable(url string) bool {
+	client := http.Client{
+		Timeout: 3 * time.Second,
+	}
+	res, err := client.Get(url)
+	if err != nil || res.StatusCode >= 400 {
+		return false
+	}
+
+	defer res.Body.Close()
+	return true
 }
